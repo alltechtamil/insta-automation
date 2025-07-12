@@ -1,0 +1,1678 @@
+================================================================
+Directory Structure
+================================================================
+```
+└── 📁insta-frontend
+    └── 📁public
+        ├── vite.svg
+    └── 📁src
+        └── 📁components
+            └── 📁Modals
+                ├── DeleteConfirmModal.jsx
+            └── 📁shared
+                ├── Content.jsx
+                ├── SideNav.jsx
+            └── 📁ui
+                ├── button.jsx
+                ├── dropdown-menu.jsx
+        └── 📁config
+            ├── envConfig.js
+        └── 📁lib
+            ├── utils.js
+        └── 📁pages
+            └── 📁auth
+                ├── LoginPage.jsx
+            └── 📁dashboard
+                └── 📁automations
+                    └── 📁components
+                        ├── AutomationFormModal.jsx
+                        ├── AutomationViewModal.jsx
+                    ├── AutomationsPage.jsx
+                └── 📁instagram
+                    └── 📁component
+                        ├── InstagramConfigForm.jsx
+                    ├── InstagramProfilePage.jsx
+                └── 📁logs
+                    ├── DmLogsPage.jsx
+                ├── DashboardContents.jsx
+                ├── DashBoardLayout.jsx
+        └── 📁redux
+            └── 📁auth
+                ├── authSlice.js
+            ├── store.js
+        └── 📁routes
+            ├── ProtectedRoute.jsx
+        └── 📁utils
+            ├── APIErrorHandler.js
+        ├── App.css
+        ├── App.jsx
+        ├── index.css
+        ├── main.jsx
+        ├── routes.jsx
+    ├── .gitignore
+    ├── components.json
+    ├── extract_for_ai.sh
+    ├── index.html
+    ├── jsconfig.json
+    ├── package-lock.json
+    ├── package.json
+    └── vite.config.js
+```
+================================================================
+Start of Codebase
+================================================================
+
+================================================
+FILE: components.json
+================================================
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": false,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+
+================================================
+FILE: eslint.config.js
+================================================
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+
+================================================
+FILE: index.html
+================================================
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+================================================
+FILE: jsconfig.json
+================================================
+{
+    "files": [],
+    "references": [],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        }
+    }
+}
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "insta-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.0.0",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@reduxjs/toolkit": "^2.8.2",
+    "@tailwindcss/vite": "^4.1.11",
+    "antd": "^5.25.3",
+    "axios": "^1.9.0",
+    "class-variance-authority": "^0.7.1",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
+    "framer-motion": "^12.19.2",
+    "lucide-react": "^0.523.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.0",
+    "redux-persist": "^6.0.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "vite": "^7.0.4"
+  }
+}
+
+================================================
+FILE: src/App.css
+================================================
+.App {
+  text-align: center;
+}
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+.App-link {
+  color: #61dafb;
+}
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+================================================
+FILE: src/App.jsx
+================================================
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import routes from './routes.jsx';
+import ProtectedRoute from './routes/ProtectedRoute';
+import { Toaster } from 'react-hot-toast';
+const Loader = () => (
+  <div className='flex justify-center items-center h-screen'>
+    <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-red-900'></div>
+  </div>
+);
+function App() {
+  const dispatch = useDispatch();
+  return (
+    <Router>
+      <Suspense fallback={<Loader />}>
+        <Toaster position="top-right" reverseOrder={false} />
+        <Routes>
+          {routes.map((route, index) => (
+            <Route
+              key={index}
+              path={route.path}
+              element={
+                route.protected ? (
+                  <ProtectedRoute>{route.element}</ProtectedRoute>
+                ) : (
+                  route.element
+                )
+              }
+            />
+          ))}
+        </Routes>
+      </Suspense>
+    </Router>
+  );
+}
+export default App;
+
+================================================
+FILE: src/components/Modals/DeleteConfirmModal.jsx
+================================================
+import React from "react";
+import { Modal } from "antd";
+const DeleteConfirmModal = ({ visible, onCancel, onConfirm, title, content }) => {
+  return (
+    <Modal
+      centered
+      title={title || "Confirm Delete"}
+      open={visible}
+      onCancel={onCancel}
+      onOk={onConfirm}
+      okText="Delete"
+      cancelText="Cancel"
+      okButtonProps={{
+        danger: true,
+      }}
+    >
+      <p>{content || "Are you sure you want to delete this item? This action cannot be undone."}</p>
+    </Modal>
+  );
+};
+export default DeleteConfirmModal;
+
+================================================
+FILE: src/components/shared/Content.jsx
+================================================
+import React from "react";
+import { Layout } from "antd";
+import DashboardContents from "../../pages/dashboard/DashboardContents";
+import AutomationsPage from "../../pages/dashboard/automations/AutomationsPage";
+import InstagramProfilePage from "../../pages/dashboard/instagram/InstagramProfilePage";
+import DmLogsPage from "../../pages/dashboard/logs/DmLogsPage";
+const { Content: AntContent } = Layout;
+const Content = ({ selectedMenu, onMenuChange }) => {
+  let content;
+  switch (selectedMenu) {
+    case "dashboard":
+      content = <DashboardContents onMenuChange={onMenuChange} />;
+      break;
+    case "automations":
+      content = <AutomationsPage />;
+      break;
+    case "instagram":
+      content = <InstagramProfilePage />;
+      break;
+    case "reports":
+      content = <DmLogsPage />;
+      break;
+    default:
+      content = <DashboardContents onMenuChange={onMenuChange} />;
+  }
+  return (
+    <AntContent className="thumb-control" style={{ padding: "6px", height: "85vh", overflow: "auto" }}>
+      {content}
+    </AntContent>
+  );
+};
+export default Content;
+
+================================================
+FILE: src/components/shared/SideNav.jsx
+================================================
+import React, { useState } from "react";
+import { Button, Layout, Menu } from "antd";
+import { MdLogout, } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import {
+  LayoutDashboard,
+  Bot,
+  Instagram,
+  FileBarChart2,
+  LucideInstagram
+} from "lucide-react";
+const { Sider } = Layout;
+const { SubMenu } = Menu;
+const MENU_ITEMS = [
+  {
+    key: "dashboard",
+    icon: <LayoutDashboard size={18} />,
+    label: "Dashboard",
+    type: "item",
+  },
+  {
+    key: "automations",
+    icon: <Bot size={18} />,
+    label: "Automations",
+    type: "item",
+  },
+  {
+    key: "instagram",
+    icon: <Instagram size={18} />,
+    label: "Instagram",
+    type: "item",
+  },
+  {
+    key: "reports",
+    icon: <FileBarChart2 size={18} />,
+    label: "Reports",
+    type: "item",
+  },
+];
+const DEFAULT_SIDEBAR_WIDTH = 250;
+const MOBILE_COLLAPSED_WIDTH = 60;
+export default function Sidebar({ onSelectMenu, selectedKey }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [openKeys, setOpenKeys] = useState([]);
+  const toggleCollapsed = () => setCollapsed(!collapsed);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const handleOpenChange = (keys) => {
+    const latestOpenKey = keys.find((key) => openKeys.indexOf(key) === -1);
+    setOpenKeys(latestOpenKey ? [latestOpenKey] : keys);
+  };
+  const handleMenuSelect = ({ key }) => {
+    onSelectMenu(key);
+  };
+  const getShadowStyle = () => {
+    return window.innerWidth <= 768 && !collapsed ? "0px 0px 1112px 1112px rgb(104, 104, 104, 0.3)" : "none";
+  };
+  const handleLogout = () => {
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
+  const renderMenuItem = (item) => {
+    if (item.type === "group") {
+      return (
+        <SubMenu key={item.key} icon={item.icon} title={item.label}>
+          {item.children.map((child) => (
+            <Menu.Item key={child.key} icon={child.icon}>
+              {child.label}
+            </Menu.Item>
+          ))}
+        </SubMenu>
+      );
+    }
+    return (
+      <Menu.Item key={item.key} icon={item.icon}>
+        {item.label}
+      </Menu.Item>
+    );
+  };
+  return (
+    <Sider
+      width={DEFAULT_SIDEBAR_WIDTH}
+      theme="light"
+      breakpoint="lg"
+      collapsedWidth={MOBILE_COLLAPSED_WIDTH}
+      collapsible
+      collapsed={collapsed}
+      onCollapse={toggleCollapsed}
+      style={{
+        background: "
+        boxShadow: getShadowStyle(),
+        zIndex: 10,
+        position: "relative",
+      }}
+    >
+      <div className="text-center py-2 border-b border-gray-400 bg-white flex items-center justify-center flex-row gap-3">
+        <LucideInstagram size={35} className={` p-1 mt-2 rounded bg-pink-500 fill-white stroke-1 stroke-pink-500 mb-1`} />
+        {!collapsed && (
+          <div className="text-gray-900 text-start m-0">
+            <h2 className="text-md md:text-xl font-semibold uppercase">
+              InstaBOT
+            </h2>
+            <p className="text-xs">Dashboard</p>
+          </div>
+        )}
+      </div>
+      <Menu
+        mode="inline"
+        defaultSelectedKeys={["dashboard"]}
+        selectedKeys={[selectedKey]}
+        openKeys={openKeys}
+        onOpenChange={handleOpenChange}
+        onSelect={handleMenuSelect}
+        style={{
+          borderRight: 0,
+          height: collapsed ? "calc(100vh - 150px)" : "calc(100vh - 150px)",
+        }}
+        className="flex-grow overflow-y-auto scrollbar"
+      >
+        {MENU_ITEMS.map(renderMenuItem)}
+      </Menu>
+      <div className="flex justify-center items-center w-full">
+        <Button onClick={handleLogout} style={{ backgroundColor: "
+          {!collapsed && "Logout"}
+        </Button>
+      </div>
+    </Sider>
+  );
+}
+
+================================================
+FILE: src/components/ui/button.jsx
+================================================
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils"
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "button"
+  return (
+    <Comp
+      className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
+      {...props} />
+  );
+})
+Button.displayName = "Button"
+export { Button, buttonVariants }
+
+================================================
+FILE: src/components/ui/dropdown-menu.jsx
+================================================
+"use client";;
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+const DropdownMenu = ({
+  options,
+  children
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+  return (
+    <div className="relative ">
+      <Button
+        onClick={toggleDropdown}
+        className="flex items-center space-x-3 bg-[
+        {children ?? "Menu"}
+        <>
+          <motion.span
+            className="ml-2"
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut", type: "spring" }}>
+            <ChevronDown className="h-4 w-4" />
+          </motion.span>
+        </>
+      </Button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ y: -5, scale: 0.95, filter: "blur(10px)" }}
+            animate={{ y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ y: -5, scale: 0.95, opacity: 0, filter: "blur(10px)" }}
+            transition={{ duration: 0.6, ease: "circInOut", type: "spring" }}
+            className="absolute z-10 w-48 mt-2 p-1 bg-[
+            {options && options.length > 0 ? (
+              options.map((option, index) => (
+                <motion.button
+                  initial={{
+                    opacity: 0,
+                    x: 10,
+                    scale: 0.95,
+                    filter: "blur(10px)",
+                  }}
+                  animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
+                  exit={{
+                    opacity: 0,
+                    x: 10,
+                    scale: 0.95,
+                    filter: "blur(10px)",
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    delay: index * 0.1,
+                    ease: "easeInOut",
+                    type: "spring",
+                  }}
+                  whileHover={{
+                    backgroundColor: "
+                    transition: {
+                      duration: 0.4,
+                      ease: "easeInOut",
+                    },
+                  }}
+                  whileTap={{
+                    scale: 0.95,
+                    transition: {
+                      duration: 0.2,
+                      ease: "easeInOut",
+                    },
+                  }}
+                  key={option.label}
+                  onClick={option.onClick}
+                  className="px-2 py-3 cursor-pointer text-white text-sm rounded-lg w-full text-left flex items-center gap-x-2">
+                  {option.Icon}
+                  {option.label}
+                </motion.button>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-white text-xs">No options</div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+export { DropdownMenu };
+
+================================================
+FILE: src/config/envConfig.js
+================================================
+export const BACKEND_API_URL = "http:
+export function assertEnv() {
+  if (!BACKEND_API_URL) {
+    throw new Error('Missing BACKEND_API_URL — check your envConfig file!');
+  }
+}
+assertEnv();
+
+================================================
+FILE: src/index.css
+================================================
+@import "tailwindcss";
+tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.bg-DarkPrimary {
+  background-color: #efefef;
+}
+.scrollbar {
+  scrollbar-width: thin;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+.scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+@media (max-width: 576px) {
+  .add-btn {
+    margin-top: 10px;
+  }
+}
+.card-extra-responsive {
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 576px) {
+  .ant-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .card-extra-responsive {
+    width: 100%;
+    margin-top: 8px;
+  }
+  .card-extra-responsive .ant-btn {
+    width: 100%;
+  }
+}
+
+================================================
+FILE: src/lib/utils.js
+================================================
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge"
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
+
+================================================
+FILE: src/main.jsx
+================================================
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './redux/store';
+import './index.css';
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
+    </Provider>
+  </React.StrictMode>
+);
+
+================================================
+FILE: src/pages/auth/LoginPage.jsx
+================================================
+import React from 'react'
+const LoginPage = () => {
+    return (
+        <div>
+            <h1 className='text-2xl font-bold text-center'>Login Page</h1>
+        </div>
+    )
+}
+export default LoginPage
+
+================================================
+FILE: src/pages/dashboard/DashBoardLayout.jsx
+================================================
+import React, { useState } from "react";
+import { Layout, Badge, Avatar } from "antd";
+import { BellOutlined, LoginOutlined, UserOutlined } from "@ant-design/icons";
+import Sidebar from "../../components/shared/SideNav";
+import Content from "../../components/shared/Content";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+const { Header, Content: AntdContent } = Layout;
+const DashBoardLayout = () => {
+  const [selectedMenu, setSelectedMenu] = useState("dashboard");
+  const navigate = useNavigate();
+  const handleMenuClick = (menuKey) => {
+    setSelectedMenu(menuKey);
+  };
+  const handleLogout = () => {
+    toast.success('Logged out successfully');
+    navigate('/');
+  };
+  return (
+    <Layout className="h-screen rounded-lg bg-[
+      <Sidebar onSelectMenu={handleMenuClick} selectedKey={selectedMenu} />
+      <Layout className="md:m-2 m-0.5 rounded-lg overflow-hidden">
+        <Header style={{ background: "
+          <h1 className='text-gray-100 shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] md:text-2xl font-bold m-0'>
+            Instagram Automation
+          </h1>
+        </Header>
+        <AntdContent className="rounded-b-lg overflow-hidden p-0 bg-white">
+          <Content selectedMenu={selectedMenu} onMenuChange={(menuKey) => setSelectedMenu(menuKey)} />
+        </AntdContent>
+      </Layout>
+    </Layout>
+  );
+};
+export default DashBoardLayout;
+
+================================================
+FILE: src/pages/dashboard/DashboardContents.jsx
+================================================
+import React from "react";
+import { Zap, MessageSquare, Repeat, CheckCircle, XCircle, Clock, Users } from "lucide-react";
+import { Button } from "antd";
+const Card = React.forwardRef(({ className, ...props }, ref) => (
+    <div ref={ref} className={`rounded-lg border bg-white text-card-foreground shadow-sm ${className || ""}`} {...props} />
+));
+Card.displayName = "Card";
+const CardContent = React.forwardRef(({ className, ...props }, ref) => (
+    <div ref={ref} className={`p-6 ${className || ""}`} {...props} />
+));
+CardContent.displayName = "CardContent";
+const DashboardContents = ({ onMenuChange }) => {
+    const statCards = [
+        {
+            title: "Plan Limit",
+            value: "Unlimited",
+            subtitle: "active workflows",
+            icon: Repeat,
+            color: "bg-purple-200 text-purple-700",
+            menuKey: "plans",
+        },
+        {
+            title: "Active Automations",
+            value: "8 of 9 total",
+            icon: Repeat,
+            color: "bg-blue-200 text-blue-700",
+            menuKey: "automations",
+        },
+        {
+            title: "Messages Sent",
+            value: "11,710",
+            subtitle: "last 30 days",
+            icon: MessageSquare,
+            color: "bg-green-200 text-green-700",
+            menuKey: "messages",
+        },
+        {
+            title: "Response Rate",
+            value: "100%",
+            subtitle: "last 30 days",
+            icon: Users,
+            color: "bg-yellow-200 text-yellow-700",
+            menuKey: "reports",
+        },
+    ];
+    const executionSummary = [
+        { label: "Total", value: "11,725", icon: Repeat },
+        { label: "Completed", value: "11,710", icon: CheckCircle, color: "text-green-600" },
+        { label: "Failed", value: "15", icon: XCircle, color: "text-red-600" },
+        { label: "Waiting", value: "0", icon: Clock, color: "text-orange-600" },
+    ];
+    return (
+        <div className="p-6 bg-gray-50 min-h-screen space-y-8">
+            {}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-purple-700">Welcome to InstaBOT</h1>
+                    <p className="text-sm text-gray-600">
+                        Automate your Instagram comment replies with personalized DMs:{" "}
+                    </p>
+                </div>
+                <Button onClick={() => onMenuChange("automations")} className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
+                    <Zap className="h-4 w-4" /> New Automation
+                </Button>
+            </div>
+            {}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {statCards.map((card) => {
+                    const Icon = card.icon;
+                    return (
+                        <Card key={card.title}
+                            className="relative cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-gray-200 shadow-sm"
+                            onClick={() => card.menuKey && onMenuChange(card.menuKey)}
+                        >
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <div className="text-2xl font-bold text-gray-900">{card.value}</div>
+                                        <p className="text-sm text-gray-600">{card.title}</p>
+                                        {card.subtitle && <p className="text-xs text-gray-500">{card.subtitle}</p>}
+                                    </div>
+                                    <div className={`p-2 rounded-full ${card.color}`}>
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </div>
+            {}
+            <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Execution Summary</h2>
+                <p className="text-sm text-gray-500 mb-6">Last 30 days performance metrics</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                    {executionSummary.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <Card
+                                className="relative cursor-pointer hover:shadow-lg transition-shadow duration-200 border border-gray-200 shadow-sm"
+                                key={item.label}>
+                                <CardContent className="flex items-center gap-4">
+                                    <div className={`p-2 rounded-full bg-gray-100 ${item.color || "text-gray-700"}`}>
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-lg font-semibold text-gray-900">{item.value}</div>
+                                        <p className="text-sm text-gray-600">{item.label}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+};
+export default DashboardContents;
+
+================================================
+FILE: src/pages/dashboard/automations/AutomationsPage.jsx
+================================================
+import React, { useState, useMemo } from 'react';
+import {
+    Card,
+    Button,
+    Input,
+    Row,
+    Col,
+    Typography,
+    Select,
+    Switch,
+    List,
+    Space,
+    Tag,
+    Tooltip,
+    message
+} from 'antd';
+import {
+    PlusOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    EditOutlined,
+} from '@ant-design/icons';
+import AutomationFormModal from './components/AutomationFormModal';
+import AutomationViewModal from './components/AutomationViewModal';
+import toast from 'react-hot-toast';
+import DeleteConfirmModal from '../../../components/Modals/DeleteConfirmModal';
+const { Title, Text } = Typography;
+const { Option } = Select;
+const mockAutomations = [
+    {
+        _id: '1',
+        userId: 'user123',
+        mediaId: 'media456',
+        postCaption: 'Check out this cool post!',
+        keywords: ['awesome', 'cool', '🔥'],
+        replyMessage: 'Thanks for the support!',
+        replyComment: 'Glad you liked it!',
+        isEnabled: true,
+        isReply: true,
+        isDM: true,
+        maxReplies: 5,
+        maxDMs: 2,
+        sentReplies: 1,
+        sentDMs: 0,
+        startDate: '2025-07-11T00:00:00Z',
+        endDate: null,
+        createdAt: '2025-07-12T10:00:00Z',
+        updatedAt: '2025-07-12T10:00:00Z',
+    },
+    {
+        _id: '2',
+        userId: 'user789',
+        mediaId: 'media789',
+        postCaption: 'Need help?',
+        keywords: ['help', 'info'],
+        replyMessage: 'Please DM us for more info.',
+        replyComment: null,
+        isEnabled: false,
+        isReply: true,
+        isDM: false,
+        maxReplies: null,
+        maxDMs: null,
+        sentReplies: 3,
+        sentDMs: 0,
+        startDate: '2025-07-01T00:00:00Z',
+        endDate: '2025-07-30T00:00:00Z',
+        createdAt: '2025-07-02T10:00:00Z',
+        updatedAt: '2025-07-10T12:00:00Z',
+    },
+];
+const AutomationPage = () => {
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [modalMode, setModalMode] = useState('create');
+    const [selectedAutomation, setSelectedAutomation] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [viewModalVisible, setViewModalVisible] = useState(false);
+    const [modalState, setModalState] = useState({ type: null, data: null });
+    const showCreateModal = () => {
+        setModalMode('create');
+        setSelectedAutomation(null);
+        setIsModalVisible(true);
+    };
+    const showEditModal = (automation) => {
+        setModalMode('edit');
+        setSelectedAutomation(automation);
+        setIsModalVisible(true);
+    };
+    const handleModalCancel = () => {
+        setIsModalVisible(false);
+        setSelectedAutomation(null);
+        setError(null);
+    };
+    const handleModalSubmit = async (formData) => {
+        try {
+            setLoading(true);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            message.success(modalMode === 'edit' ? 'Automation updated!' : 'Automation created!');
+            handleModalCancel();
+        } catch (e) {
+            setError('Something went wrong.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleViewAutomation = (automation) => {
+        setSelectedAutomation(automation);
+        setViewModalVisible(true);
+    };
+    const handleCloseViewModal = () => {
+        setViewModalVisible(false);
+        setSelectedAutomation(null);
+    };
+    const closeModal = () => setModalState({ type: null, data: null });
+    const handleDeleteAutomation = (automation) => {
+        setModalState({ type: 'delete', data: automation });
+    };
+    const handleConfirmDelete = () => {
+        const automationId = modalState.data?._id;
+        toast.success('Automation deleted successfully');
+        console.log(`Delete automation with ID: ${automationId}`);
+        // TODO: Replace the mock deletion with API call or state update
+        closeModal(); 
+    };
+    const filteredAutomations = useMemo(() => {
+        return mockAutomations
+            .filter(item =>
+                item.replyMessage.toLowerCase().includes(search.toLowerCase())
+            )
+            .filter(item =>
+                statusFilter === 'all'
+                    ? true
+                    : statusFilter === 'active'
+                        ? item.isEnabled
+                        : !item.isEnabled
+            )
+            .sort((a, b) => {
+                return sortBy === 'newest'
+                    ? new Date(b.createdAt) - new Date(a.createdAt)
+                    : new Date(a.createdAt) - new Date(b.createdAt);
+            });
+    }, [search, statusFilter, sortBy]);
+    return (
+        <Card bordered={false}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+                <Col>
+                    <Title level={3}>Automations</Title>
+                    <Text type="secondary">
+                        Create and manage your Instagram DM & Comment automations
+                    </Text>
+                </Col>
+                <Col>
+                    <Space>
+                        <Button type="primary" icon={<PlusOutlined />} onClick={showCreateModal}>
+                            Comment Automation
+                        </Button>
+                    </Space>
+                </Col>
+            </Row>
+            <Row gutter={16} style={{ marginBottom: 24 }}>
+                <Col xs={24} sm={12} md={6}>
+                    <Input.Search
+                        placeholder="Search by reply message..."
+                        allowClear
+                        onSearch={setSearch}
+                    />
+                </Col>
+                <Col xs={24} sm={12} md={4}>
+                    <Select
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="all">All</Option>
+                        <Option value="active">Active</Option>
+                        <Option value="inactive">Inactive</Option>
+                    </Select>
+                </Col>
+                <Col xs={24} sm={12} md={4}>
+                    <Select
+                        value={sortBy}
+                        onChange={setSortBy}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="newest">Newest first</Option>
+                        <Option value="oldest">Oldest first</Option>
+                    </Select>
+                </Col>
+            </Row>
+            <List
+                dataSource={filteredAutomations}
+                renderItem={item => (
+                    <Card
+                        style={{ marginBottom: 16 }}
+                        className="cursor-pointer shadow-md"
+                    >
+                        <Row justify="space-between" align="middle">
+                            <Col>
+                                <Space direction="vertical">
+                                    <h1 className='text-xl font-bold'>{item.postCaption}</h1>
+                                    <Text type="secondary">
+                                        Keywords: {item.keywords.join(', ')}
+                                    </Text>
+                                    <Text type="secondary">
+                                        Created: {new Date(item.createdAt).toLocaleDateString()}
+                                    </Text>
+                                    <Text type="secondary">
+                                        {item.isReply ? 'Auto-Reply' : ''} {item.isDM ? ' + DM' : ''}
+                                    </Text>
+                                </Space>
+                            </Col>
+                            <Col>
+                                <Space>
+                                    <Tag color={item.isEnabled ? 'green' : 'default'}>
+                                        {item.isEnabled ? 'Active' : 'Inactive'}
+                                    </Tag>
+                                    <Switch checked={item.isEnabled} disabled />
+                                    <Tooltip title="Edit Automation">
+                                        <Button icon={<EditOutlined />} onClick={() => showEditModal(item)} />
+                                    </Tooltip>
+                                    <Tooltip title="View Automation">
+                                        <Button icon={<EyeOutlined />} onClick={() => handleViewAutomation(item)} />
+                                    </Tooltip>
+                                    <Tooltip title="Delete Automation">
+                                        <Button
+                                            icon={<DeleteOutlined />}
+                                            danger
+                                            onClick={() => handleDeleteAutomation(item)}
+                                        />
+                                    </Tooltip>
+                                </Space>
+                            </Col>
+                        </Row>
+                    </Card>
+                )}
+            />
+            {/* 🚀 Modal Component */}
+            <AutomationFormModal
+                mode={modalMode}
+                visible={isModalVisible}
+                onCancel={handleModalCancel}
+                automation={selectedAutomation}
+                onSubmit={handleModalSubmit}
+                loading={loading}
+                error={error}
+            />
+            <AutomationViewModal
+                visible={viewModalVisible}
+                onCancel={handleCloseViewModal}
+                automation={selectedAutomation}
+            />
+            <DeleteConfirmModal
+                visible={modalState.type === 'delete'}
+                onCancel={closeModal}
+                onConfirm={handleConfirmDelete}
+                title={`Delete Automation: ${modalState.data?.postCaption || 'Automation'}`}
+                content={`Are you sure you want to permanently delete this automation? This action cannot be undone.`}
+                okText="Delete"
+            />
+        </Card>
+    );
+};
+export default AutomationPage;
+
+================================================
+FILE: src/pages/dashboard/automations/components/AutomationFormModal.jsx
+================================================
+import React, { useEffect } from 'react';
+import { Modal, Form, Input, InputNumber, Button, DatePicker, Switch, Alert, Row, Col, Select } from 'antd';
+import dayjs from 'dayjs';
+const AutomationFormModal = ({
+    mode,
+    visible,
+    onCancel,
+    automation,
+    onSubmit,
+    loading,
+    error
+}) => {
+    const [form] = Form.useForm();
+    const isEditMode = mode === 'edit';
+    const [instagramPosts, setInstagramPosts] = React.useState([]);
+    const [loadingPosts, setLoadingPosts] = React.useState(false);
+    useEffect(() => {
+        if (visible) {
+            if (isEditMode && automation) {
+                form.setFieldsValue({
+                    mediaId: automation.mediaId,
+                    keywords: automation.keywords?.join(', '),
+                    replyMessage: automation.replyMessage,
+                    replyComment: automation.replyComment,
+                    isEnabled: automation.isEnabled,
+                    isReply: automation.isReply,
+                    isDM: automation.isDM,
+                    maxReplies: automation.maxReplies,
+                    maxDMs: automation.maxDMs,
+                    startDate: automation.startDate ? dayjs(automation.startDate) : null,
+                    endDate: automation.endDate ? dayjs(automation.endDate) : null,
+                });
+            } else {
+                form.resetFields();
+            }
+        }
+    }, [automation, visible, form, isEditMode]);
+    const handleFinish = (values) => {
+        const formatted = {
+            ...values,
+            keywords: values.keywords.split(',').map(k => k.trim().toLowerCase()).filter(Boolean),
+            startDate: values.startDate ? values.startDate.toISOString() : null,
+            endDate: values.endDate ? values.endDate.toISOString() : null,
+        };
+        onSubmit(formatted);
+    };
+    return (
+        <Modal
+            centered
+            title={isEditMode ? 'Edit Automation' : 'Create Automation'}
+            open={visible}
+            onCancel={onCancel}
+            footer={null}
+            maskClosable={false}
+            width={650}
+        >
+            <Form form={form} layout="vertical" onFinish={handleFinish}>
+                {error && <Alert message={error} type="error" showIcon closable className="mb-4" />}
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item
+                            name="mediaId"
+                            label="Instagram Post"
+                            rules={[{ required: true, message: 'Please select an Instagram post' }]}
+                        >
+                            <Select
+                                placeholder="Select a post"
+                                loading={loadingPosts}
+                                options={instagramPosts.map(post => ({
+                                    label: post.caption ? `${post.caption.slice(0, 40)}...` : post.id,
+                                    value: post.id
+                                }))}
+                                showSearch
+                                filterOption={(input, option) =>
+                                    option.label.toLowerCase().includes(input.toLowerCase())
+                                }
+                            />
+                        </Form.Item>                    </Col>
+                    <Col span={12}>
+                        <Form.Item
+                            name="keywords"
+                            label="Keywords (comma-separated)"
+                            rules={[{ required: true, message: 'At least one keyword is required' }]}
+                        >
+                            <Input placeholder="e.g. hello, interest, free" />
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <Form.Item
+                    name="replyMessage"
+                    label="DM Message"
+                    rules={[{ required: true, message: 'Reply message is required' }]}
+                >
+                    <Input.TextArea rows={3} placeholder="Type your DM reply message..." />
+                </Form.Item>
+                <Form.Item name="replyComment" label="Public Comment Reply (optional)">
+                    <Input.TextArea rows={2} placeholder="Optional public comment reply..." />
+                </Form.Item>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item name="maxReplies" label="Max Comment Replies">
+                            <InputNumber min={0} style={{ width: '100%' }} placeholder="No limit = leave blank" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name="maxDMs" label="Max DMs">
+                            <InputNumber min={0} style={{ width: '100%' }} placeholder="No limit = leave blank" />
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item name="startDate" label="Start Date">
+                            <DatePicker style={{ width: '100%' }} />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name="endDate" label="End Date">
+                            <DatePicker style={{ width: '100%' }} />
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <Row gutter={16}>
+                    <Col span={8}>
+                        <Form.Item name="isEnabled" label="Automation Enabled" valuePropName="checked">
+                            <Switch />
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item name="isReply" label="Send Comment Reply" valuePropName="checked">
+                            <Switch />
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item name="isDM" label="Send DM" valuePropName="checked">
+                            <Switch />
+                        </Form.Item>
+                    </Col>
+                </Row>
+                <Form.Item style={{ textAlign: 'right', marginTop: 24 }}>
+                    <Button onClick={onCancel} style={{ marginRight: 8 }}>
+                        Cancel
+                    </Button>
+                    <Button type="primary" htmlType="submit" loading={loading}>
+                        {loading ? 'Saving...' : isEditMode ? 'Update Automation' : 'Create Automation'}
+                    </Button>
+                </Form.Item>
+            </Form>
+        </Modal>
+    );
+};
+export default AutomationFormModal;
+
+================================================
+FILE: src/pages/dashboard/automations/components/AutomationViewModal.jsx
+================================================
+import React from 'react';
+import {
+    Modal,
+    Descriptions,
+    Tag,
+    Typography,
+    Space,
+    Tooltip,
+    Divider
+} from 'antd';
+import {
+    ThunderboltOutlined,
+    ClockCircleOutlined,
+    CheckCircleOutlined,
+    MessageOutlined,
+    CommentOutlined,
+    EyeOutlined,
+    CalendarOutlined,
+    InboxOutlined,
+    NumberOutlined
+} from '@ant-design/icons';
+import dayjs from 'dayjs';
+const { Title, Text } = Typography;
+const AutomationViewModal = ({ visible, onCancel, automation }) => {
+    if (!automation) return null;
+    const formatDate = (date) =>
+        date ? dayjs(date).format('DD MMM YYYY, HH:mm') : 'N/A';
+    return (
+        <Modal
+            title={
+                <Title level={4}>
+                    <ThunderboltOutlined style={{ marginRight: 8 }} />
+                    Automation Details
+                </Title>
+            }
+            open={visible}
+            onCancel={onCancel}
+            footer={null}
+            width={700}
+            centered
+        >
+            <Descriptions bordered column={1} size="small">
+                <Descriptions.Item label={<Space><InboxOutlined /> Post ID</Space>}>
+                    <Text code>{automation.mediaId}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label={<Space><CommentOutlined /> Post Caption</Space>}>
+                    {automation.postCaption || 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label={<Space><MessageOutlined /> DM Message</Space>}>
+                    {automation.replyMessage || 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label={<CommentOutlined />} Public Comment Reply>
+                    {automation.replyComment || 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Keywords">
+                    {automation.keywords?.length > 0
+                        ? automation.keywords.map((kw, i) => (
+                            <Tag key={i} color="blue">{kw}</Tag>
+                        ))
+                        : 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Send DM">
+                    <Tag color={automation.isDM ? 'green' : 'red'}>
+                        {automation.isDM ? 'Yes' : 'No'}
+                    </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Send Comment Reply">
+                    <Tag color={automation.isReply ? 'green' : 'red'}>
+                        {automation.isReply ? 'Yes' : 'No'}
+                    </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Automation Status">
+                    <Tag color={automation.isEnabled ? 'green' : 'red'}>
+                        {automation.isEnabled ? 'Active' : 'Inactive'}
+                    </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label={<NumberOutlined />}>
+                    <Space>
+                        Max Replies:
+                        <Text>{automation.maxReplies ?? 'No Limit'}</Text>
+                    </Space>
+                    <br />
+                    <Space>
+                        Max DMs:
+                        <Text>{automation.maxDMs ?? 'No Limit'}</Text>
+                    </Space>
+                </Descriptions.Item>
+                <Descriptions.Item label={<EyeOutlined />} Sent Summary>
+                    <Space>
+                        Replies Sent:
+                        <Text strong>{automation.sentReplies}</Text>
+                    </Space>
+                    <br />
+                    <Space>
+                        DMs Sent:
+                        <Text strong>{automation.sentDMs}</Text>
+                    </Space>
+                </Descriptions.Item>
+                <Descriptions.Item label={<ClockCircleOutlined />} Duration>
+                    <Space>
+                        Start:
+                        {formatDate(automation.startDate)}
+                    </Space>
+                    <br />
+                    <Space>
+                        End:
+                        {formatDate(automation.endDate)}
+                    </Space>
+                </Descriptions.Item>
+                <Descriptions.Item label={<CalendarOutlined />} Created At>
+                    {formatDate(automation.createdAt)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Last Updated">
+                    {formatDate(automation.updatedAt)}
+                </Descriptions.Item>
+            </Descriptions>
+        </Modal>
+    );
+};
+export default AutomationViewModal;
+
+================================================
+FILE: src/pages/dashboard/instagram/InstagramProfilePage.jsx
+================================================
+import React, { useState } from 'react';
+import { Card, Button, Avatar, Typography, Space } from 'antd';
+import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import toast from 'react-hot-toast';
+import InstagramConfigForm from './component/InstagramConfigForm';
+const { Text } = Typography;
+const InstagramProfilePage = () => {
+    const [loading, setLoading] = useState(false);
+    const handleSubmit = async (formData) => {
+        setLoading(true);
+        try {
+            // TODO: API call to save formData
+            console.log('Submitted config:', formData);
+            toast.success('Configuration saved successfully');
+        } catch (error) {
+            toast.error('Failed to save configuration');
+        } finally {
+            setLoading(false);
+        }
+    };
+    const [profile, setProfile] = useState({
+        name: 'All Tech Tamil',
+        username: 'all_tech_tamil',
+        profilePic: 'https:
+    });
+    const handleRemove = () => {
+        console.log('Remove account flow triggered');
+        setProfile(null); 
+    };
+    if (!profile) return <Text type="secondary">No account connected</Text>;
+    return (
+        <div style={{ padding: 24, maxWidth: 700, margin: '0 auto' }}>
+            <Text strong style={{ fontSize: 16, display: 'block', marginBottom: 16 }}>
+                Connected Account
+            </Text>
+            <Card style={{ borderRadius: 12 }}>
+                <Space direction="horizontal" align="center" size="large">
+                    <Avatar size={64} src={profile.profilePic} />
+                    <div>
+                        <Text strong style={{ fontSize: 18 }}>{profile.name}</Text>
+                        <br />
+                        <Text type="secondary">@{profile.username}</Text>
+                    </div>
+                </Space>
+                <div style={{ marginTop: 16 }}>
+                    <Space>
+                        <Button danger icon={<DeleteOutlined />} onClick={handleRemove}>
+                            Logout
+                        </Button>
+                    </Space>
+                </div>
+            </Card>
+            <InstagramConfigForm
+                initialValues={{
+                    facebookUserId: '',
+                    fbLongAccessToken: '',
+                    pageLongAccessToken: '',
+                    instagramAccountId: '',
+                }}
+                onSubmit={handleSubmit}
+                loading={loading}
+            />
+        </div>
+    );
+};
+export default InstagramProfilePage;
+
+================================================
+FILE: src/pages/dashboard/instagram/component/InstagramConfigForm.jsx
+================================================
+import React from 'react';
+import { Form, Input, Button, Card, Typography } from 'antd';
+const { Title } = Typography;
+const InstagramConfigForm = ({ initialValues = {}, onSubmit, loading }) => {
+    const [form] = Form.useForm();
+    const handleFinish = (values) => {
+        if (onSubmit) onSubmit(values);
+    };
+    return (
+        <Card title={<Title level={5}>Facebook / Instagram Configuration</Title>} style={{ marginTop: 24 }}>
+            <Form
+                form={form}
+                layout="vertical"
+                initialValues={initialValues}
+                onFinish={handleFinish}
+            >
+                <Form.Item
+                    label="Facebook User ID"
+                    name="facebookUserId"
+                    rules={[{ required: true, message: 'Facebook User ID is required' }]}
+                >
+                    <Input placeholder="e.g. 10203040506070809" />
+                </Form.Item>
+                <Form.Item
+                    label="Facebook Long Access Token"
+                    name="fbLongAccessToken"
+                    rules={[{ required: true, message: 'Token is required' }]}
+                >
+                    <Input.TextArea rows={2} placeholder="Paste your long-lived FB access token" />
+                </Form.Item>
+                <Form.Item
+                    label="Page Long Access Token"
+                    name="pageLongAccessToken"
+                    rules={[{ required: true, message: 'Page token is required' }]}
+                >
+                    <Input.TextArea rows={2} placeholder="Paste your page access token" />
+                </Form.Item>
+                <Form.Item
+                    label="Instagram Account ID"
+                    name="instagramAccountId"
+                    rules={[{ required: true, message: 'Instagram Account ID is required' }]}
+                >
+                    <Input placeholder="e.g. 17841412345678901" />
+                </Form.Item>
+                <Form.Item>
+                    <Button type="primary" htmlType="submit" loading={loading}>
+                        Save Configuration
+                    </Button>
+                </Form.Item>
+            </Form>
+        </Card>
+    );
+};
+export default InstagramConfigForm;
+
+================================================
+FILE: src/redux/auth/authSlice.js
+================================================
+import { createSlice } from "@reduxjs/toolkit";
+const initialState = {
+    user: null,
+    token: null,
+    isAuthenticated: false,
+    status: 'idle',
+    error: null,
+};
+const authSlice = createSlice({
+    name: 'auth',
+    initialState,
+    reducers: {
+        login: (state, action) => {
+            state.user = action.payload.user;
+            state.token = action.payload.token;
+            state.isAuthenticated = true;
+        },
+        logout: (state) => {
+            state.user = null;
+            state.token = null;
+            state.isAuthenticated = false;
+        },
+    },
+});
+export const { login, logout } = authSlice.actions;
+export const authReducer = authSlice.reducer;
+
+================================================
+FILE: src/redux/store.js
+================================================
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import { authReducer } from './auth/authSlice';
+const persistConfig = {
+  key: 'root',
+  version: 1,
+  storage,
+  whitelist: ['auth'],
+};
+const rootReducer = combineReducers({
+  auth: authReducer,
+});
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
+});
+export const persistor = persistStore(store);
+
+================================================
+FILE: src/routes.jsx
+================================================
+import React from "react";
+import LoginPage from "./pages/auth/LoginPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import DashBoardLayout from "./pages/dashboard/DashBoardLayout";
+const routes = [
+  { path: "/", element: <LoginPage />, protected: false },
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <DashBoardLayout />
+      </ProtectedRoute>
+    ),
+    protected: true,
+  },
+];
+export default routes;
+
+================================================
+FILE: src/routes/ProtectedRoute.jsx
+================================================
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+const ProtectedRoute = ({ children }) => {
+  const location = useLocation();
+  const condition = true;
+  if (
+    !condition
+  ) {
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+  return children;
+};
+export default ProtectedRoute;
+
+================================================
+FILE: src/utils/APIErrorHandler.js
+================================================
+export const handleApiError = (error) => {
+  if (error.response?.data) {
+    return error.response.data;
+  }
+  return { success: false, message: 'An error occurred' };
+};
+
+================================================
+FILE: vite.config.js
+================================================
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path';
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+})
+
+================================================================
+End of Codebase
+================================================================

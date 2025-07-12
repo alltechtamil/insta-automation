@@ -1,0 +1,464 @@
+================================================================
+Directory Structure
+================================================================
+
+================================================================
+Start of Codebase
+================================================================
+
+================================================
+FILE: routes/webhook.routes.js
+================================================
+const express = require("express");
+const { getWebhook, postWebhook } = require("../services/webhook.services");
+const router = express.Router();
+router.get("/", getWebhook);
+router.post("/", postWebhook);
+module.exports = router;
+
+================================================
+FILE: services/auth.services.js
+================================================
+const axios = require("axios");
+const InstagramToken = require("../models/InstagramToken");
+const logger = require("../utils/logger");
+async function saveInstagramToken({ userId, accessToken, tokenType, expiresIn }) {
+  const tokenData = {
+    userId,
+    accessToken,
+    tokenType,
+    expiresIn,
+  };
+  try {
+    const existing = await InstagramToken.findOne({ userId });
+    logger.debug(`Saving Instagram Token: ${JSON.stringify(tokenData, null, 2)}`);
+    if (existing) {
+      existing.accessToken = accessToken;
+      existing.tokenType = tokenType;
+      existing.expiresIn = expiresIn;
+      await existing.save();
+      return existing;
+    } else {
+      const newToken = new InstagramToken(tokenData);
+      await newToken.save();
+      return newToken;
+    }
+  } catch (error) {
+    console.error("Error saving Instagram Token:", error);
+    logger.error(`Error saving Instagram Token: ${error.message}`);
+    throw error;
+  }
+}
+async function getInstagramProfile(accessToken) {
+  try {
+    const response = await axios.get("https:
+      params: {
+        fields: "id,username,name,user_id,account_type,profile_picture_url,followers_count,follows_count,media_count",
+        access_token: accessToken,
+      },
+    });
+    logger.debug(`Fetched Instagram Profile: ${JSON.stringify(response.data, null, 2)}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Instagram profile:", error.response?.data || error.message);
+    logger.error(`Error fetching Instagram profile: ${error.response?.data || error.message}`);
+    throw error;
+  }
+}
+module.exports = { saveInstagramToken, getInstagramProfile };
+
+================================================
+FILE: services/webhook.services.js
+================================================
+const { VERIFY_TOKEN } = require("../config/envConfig");
+const logger = require("../utils/logger");
+const getWebhook = (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+  if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
+    logger.info("WEBHOOK_VERIFIED");
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
+};
+const postWebhook = (req, res) => {
+  logger.info("Received Webhook:", JSON.stringify(req.body, null, 2));
+  res.sendStatus(200);
+};
+module.exports = { getWebhook, postWebhook };
+
+================================================
+FILE: .env
+================================================
+PORT=8080
+INSTAGRAM_APP_ID=1039187608381687
+INSTAGRAM_APP_SECRET=ed8b29869ca2eb4a3e452d6f039ec49d
+INSTAGRAM_REDIRECT_URI=https://insta-backend-n6j5.onrender.com/auth/callback
+VERIFY_TOKEN=alltechtamil123
+FRONTEND_URL=http://localhost:5173
+JWT_SECRET=MaThanMiThun@1999
+MONGODB_URI=mongodb+srv://alltechtamilblogger:sy1cpUPULloM5wal@cluster0.xgz8z.mongodb.net/insta_auto_db_new?retryWrites=true&w=majority&appName=Cluster0
+NODE_ENV=development
+
+================================================
+FILE: config/db.js
+================================================
+const mongoose = require("mongoose");
+const { MONGODB_URI } = require("./envConfig");
+const logger = require('../utils/logger');
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    logger.info("Connected to MongoDB");
+  } catch (err) {
+    console.error(`DB Error: ${err.message}`);
+    logger.error(`DB Error: ${err.message}`);
+    process.exit(1);
+  }
+};
+module.exports = connectDB;
+
+================================================
+FILE: config/envConfig.js
+================================================
+const dotenv = require("dotenv");
+const logger = require("../utils/logger");
+dotenv.config();
+const envConfig = {
+  PORT: process.env.PORT || 3000,
+  INSTAGRAM_APP_ID: process.env.INSTAGRAM_APP_ID || "1039187608381687",
+  INSTAGRAM_APP_SECRET: process.env.INSTAGRAM_APP_SECRET || "ed8b29869ca2eb4a3e452d6f039ec49d",
+  INSTAGRAM_REDIRECT_URI: process.env.INSTAGRAM_REDIRECT_URI || "https:
+  VERIFY_TOKEN: process.env.VERIFY_TOKEN || "alltechtamil123",
+  FRONTEND_URL: process.env.FRONTEND_URL || "http:
+  JWT_SECRET: process.env.JWT_SECRET || "MaThanMiThun@1999",
+  NODE_ENV: process.env.NODE_ENV || "development",
+  MONGODB_URI: process.env.MONGODB_URI || "mongodb:
+};
+logger.debug(`Environment Config: ${JSON.stringify(envConfig, null, 2)}`);
+module.exports = envConfig;
+
+================================================
+FILE: controller/auth.controller.js
+================================================
+const { default: axios } = require("axios");
+const { INSTAGRAM_APP_ID, INSTAGRAM_REDIRECT_URI, INSTAGRAM_APP_SECRET, FRONTEND_URL } = require("../config/envConfig");
+const qs = require("querystring");
+const { getInstagramProfile, saveInstagramToken } = require("../services/auth.services");
+const { generateToken } = require("../utils/jwt");
+const InstagramToken = require("../models/InstagramToken");
+const logger = require("../utils/logger");
+const login = (req, res) => {
+  const clientId = INSTAGRAM_APP_ID;
+  const redirectUri = INSTAGRAM_REDIRECT_URI;
+  const scopes = ["instagram_business_basic", "instagram_business_manage_messages", "instagram_business_manage_comments", "instagram_business_content_publish"];
+  const authUrl = `https:
+  res.redirect(authUrl);
+};
+const getInstaToken = async (req, res) => {
+  const { code } = req.query;
+  try {
+    const tokenRes = await axios.post(
+      "https:
+      qs.stringify({
+        client_id: INSTAGRAM_APP_ID,
+        client_secret: INSTAGRAM_APP_SECRET,
+        grant_type: "authorization_code",
+        redirect_uri: INSTAGRAM_REDIRECT_URI,
+        code,
+      }),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      }
+    );
+    const { access_token, user_id } = tokenRes.data;
+    logger.info(`Access Token: ${access_token}`);
+    logger.info(`User ID: ${user_id}`);
+    const longTokenRes = await axios.get("https:
+      params: {
+        grant_type: "ig_exchange_token",
+        client_secret: INSTAGRAM_APP_SECRET,
+        access_token,
+      },
+    });
+    const { access_token: longToken, expires_in } = longTokenRes.data;
+    const profile = await getInstagramProfile(longToken);
+    const savedToken = await saveInstagramToken({
+      userId: profile.id,
+      accessToken: longToken,
+      tokenType: "bearer",
+      expiresIn: expires_in,
+    });
+    logger.info(`Saved Token: ${savedToken}`);
+    const jwtToken = generateToken(profile.id);
+    const frontendURL = FRONTEND_URL;
+    res.redirect(`${frontendURL}?token=${jwtToken}`);
+  } catch (err) {
+    console.log(err);
+    logger.error(`Error logging in: ${err.response?.data || err.message}`);
+    res.status(500).json({ error: "OAuth login failed" });
+  }
+};
+const getProfile = async (req, res) => {
+  try {
+    const tokenDoc = await InstagramToken.findOne({ userId: req.userId });
+    if (!tokenDoc) return res.status(404).json({ error: "Token not found" });
+    const profile = await getInstagramProfile(tokenDoc.accessToken);
+    res.json(profile);
+  } catch (err) {
+    console.log(err);
+    logger.error(`Error fetching profile: ${err.response?.data || err.message}`);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
+};
+module.exports = {
+  login,
+  getInstaToken,
+  getProfile,
+};
+
+================================================
+FILE: middleware/auth.js
+================================================
+const { verifyToken } = require("../utils/jwt");
+const logger = require("../utils/logger");
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  logger.info(`Auth Header In Middleware: ${authHeader}`);
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: `Authorization header missing or invalid` });
+  }
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+    req.userId = decoded?.userId;
+    next();
+  } catch (err) {
+    console.error("Error verifying token:", err);
+    logger.error(`Error verifying token: ${err.message}`);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
+module.exports = authMiddleware;
+
+================================================
+FILE: middleware/errorHandler.js
+================================================
+const logger = require("../utils/logger");
+const errorHandler = (err, req, res, next) => {
+  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  logger.error(`💥 ${err.message}`, {
+    stack: err.stack,
+    path: req.originalUrl,
+    method: req.method,
+  });
+  res.status(statusCode).json({
+    error: err.message,
+    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
+  });
+};
+module.exports = errorHandler;
+
+================================================
+FILE: middleware/loggerMiddleware.js
+================================================
+const morgan = require("morgan");
+const logger = require("../utils/logger");
+const stream = {
+  write: (message) => logger.http(message.trim()),
+};
+const morganMiddleware = morgan(":method :url :status :res[content-length] - :response-time ms", { stream });
+module.exports = morganMiddleware;
+
+================================================
+FILE: middleware/notFound.js
+================================================
+const logger = require("../utils/logger");
+const notFound = (req, res, next) => {
+  const message = `🔍 Not Found - ${req.originalUrl}`;
+  logger.warn(message);
+  res.status(404).json({ error: message });
+};
+module.exports = notFound;
+
+================================================
+FILE: models/InstagramToken.js
+================================================
+const mongoose = require("mongoose");
+const instagramTokenSchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true, unique: true },
+    accessToken: { type: String, required: true },
+    tokenType: { type: String, default: "bearer" },
+    expiresIn: { type: Number, required: true },
+    expiresAt: { type: Date },
+  },
+  { timestamps: true }
+);
+instagramTokenSchema.pre("save", function (next) {
+  if (this.isModified("expiresIn")) {
+    this.expiresAt = new Date(Date.now() + this.expiresIn * 1000);
+  }
+  next();
+});
+const InstagramToken = mongoose.model("InstagramToken", instagramTokenSchema);
+module.exports = InstagramToken;
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "insta-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.1",
+    "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.10",
+    "querystring": "^0.2.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "ngrok": "^5.0.0-beta.2"
+  }
+}
+
+================================================
+FILE: routes/auth.routes.js
+================================================
+const express = require("express");
+const { getInstaToken, login, getProfile } = require("../controller/auth.controller");
+const router = express.Router();
+router.get("/login", login);
+router.get("/callback", getInstaToken);
+router.get("/profile", authMiddleware, getProfile);
+module.exports = router;
+
+================================================
+FILE: server.js
+================================================
+const express = require("express");
+const { PORT, NODE_ENV } = require("./config/envConfig");
+const connectDB = require("./config/db");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const logger = require("./utils/logger");
+const morganMiddleware = require("./middleware/loggerMiddleware");
+const notFound = require("./middleware/notFound");
+const errorHandler = require("./middleware/errorHandler");
+const path = require("path");
+const webhookRoutes = require("./routes/webhook.routes");
+const authRoutes = require("./routes/auth.routes");
+const app = express();
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(cors());
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(morganMiddleware);
+app.use("/webhook", webhookRoutes);
+app.use("/auth", authRoutes);
+app.get("/", (req, res) => {
+  logger.info("GET / - root route hit");
+  res.send("INSTAGRAM AUTOMATION BACKEND SERVER IS RUNNING");
+});
+app.get("/privacy-policy", (req, res) => {
+  res.render("privacy-policy", {
+    email: "tn34sasikumar@gmail.com",
+    appName: "All Tech Tamil",
+  });
+});
+app.use(notFound);
+app.use(errorHandler);
+app.listen(PORT, () => {
+  connectDB();
+  logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
+  logger.info(`🔗 http:
+});
+
+================================================
+FILE: utils/jwt.js
+================================================
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config/envConfig");
+function generateToken(userId) {
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
+}
+function verifyToken(token) {
+  return jwt.verify(token, JWT_SECRET);
+}
+module.exports = { generateToken, verifyToken };
+
+================================================
+FILE: utils/logger.js
+================================================
+const fs = require("fs");
+const path = require("path");
+const { createLogger, format, transports } = require("winston");
+const { combine, timestamp, printf, colorize, errors } = format;
+const logDir = path.join(__dirname, "../logs");
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
+const logFormat = printf(({ level, message, timestamp, stack }) => {
+  return `${timestamp} [${level}]: ${stack || message}`;
+});
+const logger = createLogger({
+  level: process.env.NODE_ENV === "production" ? "warn" : "debug",
+  format: combine(colorize(), timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), errors({ stack: true }), logFormat),
+  transports: [new transports.Console(), new transports.File({ filename: path.join(logDir, "error.log"), level: "error" }), new transports.File({ filename: path.join(logDir, "combined.log") })],
+  exitOnError: false,
+});
+module.exports = logger;
+
+================================================
+FILE: views/privacy-policy.ejs
+================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy</title>
+</head>
+<body>
+    <h1>Privacy Policy</h1>
+    <p><strong>
+            <%= appName %>
+        </strong> respects your privacy.</p>
+    <p>
+        We do not collect, store, or share personal information through this app.
+        All access to Instagram data is used solely for testing and development via the Instagram Graph API.
+    </p>
+    <p>
+        For questions or concerns, contact us at:
+        <a href="mailto:<%= email %>">
+            <%= email %>
+        </a>
+    </p>
+</body>
+</html>
+
+================================================================
+End of Codebase
+================================================================
