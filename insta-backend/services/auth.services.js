@@ -3,6 +3,10 @@ const InstagramToken = require("../models/InstagramToken");
 const logger = require("../utils/logger");
 
 async function saveInstagramToken({ userId, accessToken, tokenType, expiresIn }) {
+  console.log("%c Line:6 🍓 expiresIn", "color:#465975", expiresIn);
+  console.log("%c Line:6 🍞 tokenType", "color:#42b983", tokenType);
+  console.log("%c Line:6 🥟 accessToken", "color:#ed9ec7", accessToken);
+  console.log("%c Line:6 🍌 userId", "color:#4fff4B", userId);
   const tokenData = {
     userId,
     accessToken,

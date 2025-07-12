@@ -8,7 +8,10 @@ const logger = require("../utils/logger");
 
 const login = (req, res) => {
   const clientId = INSTAGRAM_APP_ID;
+  console.log("%c Line:11 🍧 INSTAGRAM_APP_ID", "color:#ed9ec7", INSTAGRAM_APP_ID);
+  console.log("%c Line:11 🥥 clientId", "color:#f5ce50", clientId);
   const redirectUri = INSTAGRAM_REDIRECT_URI;
+  console.log("%c Line:14 🥛 redirectUri", "color:#3f7cff", redirectUri);
   const scopes = ["instagram_business_basic", "instagram_business_manage_messages", "instagram_business_manage_comments", "instagram_business_content_publish"];
   const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(",")}&response_type=code`;
   res.redirect(authUrl);
@@ -16,6 +19,8 @@ const login = (req, res) => {
 
 const getInstaToken = async (req, res) => {
   const { code } = req.query;
+  console.log("%c Line:22 🍎 code", "color:#fca650", code);
+  console.log("%c Line:33 🍿 INSTAGRAM_REDIRECT_URI", "color:#f5ce50", INSTAGRAM_REDIRECT_URI);
 
   try {
     // Step 1: Exchange code for short-lived token
