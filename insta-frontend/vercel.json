@@ -1,0 +1,15 @@
+{
+"rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": ".*"
+        }
+      ]
+    }
+  ]
+}
