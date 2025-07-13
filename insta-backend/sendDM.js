@@ -1,13 +1,11 @@
 const axios = require("axios");
 
-// Replace with actual values
-const PAGE_ID = "727815197077880";
-const ACCESS_TOKEN =
-  "EAAJZBumxZBLCcBPF42w3lZC5bq4sgnG0ItQaVKl0SZCZCfKPeYEV08ouAwuucjWiMtwYYVvpUTUvJUhbFYs3ICeKYLboMF6iCaj8pfxc9KKeCx4wsJ2UBObBZBD1AVZCMwinquGRW8T2YqgxMz7ySEU844vv9hGIEeAruYcOnvJxX4uZCg91Op9nMtb0Pz5Qztl6kZCKjAPyeq3AuE9L03r5ZCP41X";
-const COMMENT_ID = "REPLACE_WITH_COMMENT_ID";
+// Replace with your actual Facebook User ID and Access Token
+const FACEBOOK_USER_ID = "727815197077880";
+const ACCESS_TOKEN = "IGAAUhjGeO1FhBZAE9keFZANcTRhNDdhUG5oTUpiOG9UbnJoWDV3ZA2xqcWE2S214VW91NWRpUmxVTzBlMnZArYXY0alJ4akRHQkY0MnRZAVk1OZA3JiUVlKblp3U1psOS1zWll6SlBMa2Yta0ZAuYzF0cUFpMnNn";
 
 async function sendInstagramDM(commentId, messageText) {
-  const url = `https://graph.facebook.com/v18.0/${PAGE_ID}/messages`;
+  const url = `https://graph.facebook.com/v18.0/${FACEBOOK_USER_ID}/messages`;
 
   const payload = {
     recipient: {
@@ -29,9 +27,11 @@ async function sendInstagramDM(commentId, messageText) {
 
     console.log("✅ Message sent successfully:", response.data);
   } catch (error) {
-    console.error("❌ Failed to send message:", error.response?.data || error.message);
+    const errData = error.response?.data || error.message;
+    console.error("❌ Failed to send message:", errData);
   }
 }
-  // sendInstagramDM("18055218875594530", "🎉 Thanks for commenting! Let me know if you have any questions.");
+
+// sendInstagramDM("COMMENT_ID_HERE", "🎉 Thanks for commenting! Let me know if you have any questions.");
 
 module.exports = { sendInstagramDM };

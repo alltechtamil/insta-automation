@@ -43,7 +43,7 @@ const getWebhook = (req, res) => {
   const challenge = req.query["hub.challenge"];
 
   if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
-    logger.info("WEBHOOK_VERIFIED");
+    console.log("WEBHOOK_VERIFIED");
     res.status(200).send(challenge);
   } else {
     res.sendStatus(403);
@@ -51,7 +51,7 @@ const getWebhook = (req, res) => {
 };
 
 const postWebhook = async (req, res) => {
-  logger.info("Received Webhook:", JSON.stringify(req.body, null, 2));
+  console.log("Received Webhook:", JSON.stringify(req.body, null, 2));
   const entries = req.body.entry || [];
 
   for (const entry of entries) {
@@ -69,12 +69,12 @@ const postWebhook = async (req, res) => {
       const instagramAccountId = entry.id;
       const now = new Date();
 
-      logger.debug(`📩 Incoming comment: "${text}" on mediaId ${mediaId} from user ${commenterId}`);
-      logger.debug(`📷 Instagram Account ID (from webhook): ${instagramAccountId}`);
+      console.log(`📩 Incoming comment: "${text}" on mediaId ${mediaId} from user ${commenterId}`);
+      console.log(`📷 Instagram Account ID (from webhook): ${instagramAccountId}`);
 
       // Skip the bot’s own comments
       if (commenterId === instagramAccountId) {
-        logger.info("👻 Skipping bot’s own comment to avoid loop.");
+        console.log("👻 Skipping bot’s own comment to avoid loop.");
         continue;
       }
 
@@ -85,26 +85,26 @@ const postWebhook = async (req, res) => {
         continue;
       }
       const userId = tokenDoc.userId;
-      logger.debug(`✅ Mapped instagramAccountId ${instagramAccountId} to userId ${userId}`);
+      console.log(`✅ Mapped instagramAccountId ${instagramAccountId} to userId ${userId}`);
 
       const postRule = await AutomatedPost.findOne({ mediaId, userId, isEnabled: true });
-      logger.debug(`🎯 postRule lookup result: ${postRule ? "FOUND" : "NOT FOUND"}`);
+      console.log(`🎯 postRule lookup result: ${postRule ? "FOUND" : "NOT FOUND"}`);
       if (!postRule) {
-        logger.info(`No active automation rule found for media ID ${mediaId}`);
+        console.log(`No active automation rule found for media ID ${mediaId}`);
         continue;
       }
       // Date window check
       if ((postRule.startDate && now < postRule.startDate) || (postRule.endDate && now > postRule.endDate)) {
-        logger.info(`⏰ Automation rule not active (outside start/end window). Skipping.`);
+        console.log(`⏰ Automation rule not active (outside start/end window). Skipping.`);
         continue;
       }
       // Keyword match
       const matchedKeyword = postRule.keywords.find((kw) => text.includes(kw.toLowerCase()));
       if (!matchedKeyword) {
-        logger.info(`🛑 No keywords matched for comment: "${text}"`);
+        console.log(`🛑 No keywords matched for comment: "${text}"`);
         continue;
       }
-      logger.info(`✅ Matched keyword "${matchedKeyword}" in comment "${text}"`);
+      console.log(`✅ Matched keyword "${matchedKeyword}" in comment "${text}"`);
 
       const dmText = postRule.replyMessage;
       const replyText = postRule.replyComment || postRule.replyMessage;
@@ -123,7 +123,7 @@ const postWebhook = async (req, res) => {
           sentAt: { $gte: new Date(now.getTime() - DM_COOLDOWN_MS) },
         });
         if (recentDM) {
-          logger.info(`⏳ DM cooldown active. Skipping DM for commenter ${commenterId}`);
+          console.log(`⏳ DM cooldown active. Skipping DM for commenter ${commenterId}`);
         } else {
           try {
             // 1) Check thread state
@@ -140,7 +140,7 @@ const postWebhook = async (req, res) => {
                 messaging_type: "RESPONSE",
               };
               const dmResponse = await axios.post(dmUrl, dmPayload, { headers: authHeader });
-              logger.info(`✅ DM sent. Message ID: ${dmResponse.data.message_id}`);
+              console.log(`✅ DM sent. Message ID: ${dmResponse.data.message_id}`);
 
               postRule.sentDMs += 1;
               postRule.lastDMErrorAt = null;
@@ -201,12 +201,12 @@ const postWebhook = async (req, res) => {
           sentAt: { $gte: new Date(now.getTime() - REPLY_COOLDOWN_MS) },
         });
         if (recentReply) {
-          logger.info(`⏳ Reply cooldown active. Skipping reply for commenter ${commenterId}`);
+          console.log(`⏳ Reply cooldown active. Skipping reply for commenter ${commenterId}`);
         } else {
           try {
             const commentPayload = { message: replyText };
             const commentResponse = await sendReplyWithBackoff(mediaId, commentPayload, authHeader);
-            logger.info(`✅ Reply sent. Comment ID: ${commentResponse.data.id}`);
+            console.log(`✅ Reply sent. Comment ID: ${commentResponse.data.id}`);
 
             postRule.sentReplies += 1;
             postRule.lastReplyErrorAt = null;
