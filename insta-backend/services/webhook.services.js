@@ -1,10 +1,10 @@
 const axios = require("axios");
-const { VERIFY_TOKEN } = require("../config/envConfig");
+const { VERIFY_TOKEN, RECEIVING_EMAILID } = require("../config/envConfig");
 const InstagramToken = require("../models/InstagramToken");
 const AutomatedPost = require("../models/AutomatedPost");
 const DMLog = require("../models/DMLog");
 const logger = require("../utils/logger");
-const { sendDMError, sendReplyError } = require("../services/email.service");
+const { sendDMError, sendReplyError, sendEmail } = require("../services/email.service");
 
 const DM_COOLDOWN_MS = 60 * 60 * 1000;
 const REPLY_COOLDOWN_MS = 30 * 60 * 1000;
@@ -129,6 +129,10 @@ const postWebhook = async (req, res) => {
               statusCode: 200,
             });
           } catch (err) {
+            sendEmail(
+              `🚀 Failed to send DM to ${commenterId} for mediaId ${mediaId}`,
+              `🚀 Failed to send DM to ${commenterId} for mediaId ${mediaId}.\n\n${JSON.stringify(err, null, 2)}`,
+            )
             const errorMessage = err.response?.data?.error?.message || err.message;
             logger.error(`❌ Failed to send DM: ${errorMessage}`);
 
@@ -137,7 +141,7 @@ const postWebhook = async (req, res) => {
             const alreadyNotified = postRule.lastDMErrorNotificationSentAt && postRule.lastDMErrorNotificationSentAt.getTime() === postRule.lastDMErrorAt.getTime();
 
             if (!alreadyNotified) {
-              await sendDMError(userId, mediaId, commenterId, errorMessage, tokenDoc, postRule, now);
+              await sendDMError(userId, mediaId, commenterId, errorMessage, postRule, now);
               postRule.lastDMErrorNotificationSentAt = now;
             }
 
@@ -200,6 +204,9 @@ const postWebhook = async (req, res) => {
               statusCode: 200,
             });
           } catch (err) {
+sendEmail(`🚨 DM Automation Failed for Media Full  - ${mediaId}`, 
+`🚨 DM Automation Failed for Media Full  - ${mediaId}.\n\n${JSON.stringify(err, null, 2)}`
+);
             const errorMessage = err.response?.data?.error?.message || err.message;
             logger.error(`❌ Failed to send reply: ${errorMessage}`);
 
@@ -208,7 +215,7 @@ const postWebhook = async (req, res) => {
             const alreadyNotified = postRule.lastReplyErrorNotificationSentAt && postRule.lastReplyErrorNotificationSentAt.getTime() === postRule.lastReplyErrorAt.getTime();
 
             if (!alreadyNotified) {
-              await sendReplyError(userId, mediaId, commenterId, errorMessage, tokenDoc, postRule, now);
+              await sendReplyError(userId, mediaId, commenterId, errorMessage, , postRule, now);
               postRule.lastReplyErrorNotificationSentAt = now;
             }
 

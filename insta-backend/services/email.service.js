@@ -1,15 +1,15 @@
 const { transporter } = require("../config/email.config");
-const { MAILER_EMAILID } = require("../config/envConfig");
+const { MAILER_EMAILID, RECEIVING_EMAILID } = require("../config/envConfig");
 const logger = require("../utils/logger");
 
-const sendEmail = async (to, subject, htmlContent, contextForLog = {}) => {
+const sendEmail = async (subject, htmlContent, contextForLog = {}) => {
   if (!to || !subject || !htmlContent) {
-    logger.error("sendEmail called with missing parameters.", { to, subject: !!subject, html: !!htmlContent, contextForLog });
+    logger.error("sendEmail called with missing parameters.", { subject: !!subject, html: !!htmlContent, contextForLog });
     throw new Error("sendEmail called with missing parameters.");
   }
   const mailOptions = {
     from: `"All Tech Tamil - Insta Automated Post" <${MAILER_EMAILID}>`,
-    to: to,
+    to: RECEIVING_EMAILID,
     subject: subject,
     html: htmlContent,
   };
@@ -28,7 +28,7 @@ const sendEmail = async (to, subject, htmlContent, contextForLog = {}) => {
   }
 };
 
-const sendDMError = async (userId, mediaId, commenterId, errorMessage, tokenDoc, postRule, now) => {
+const sendDMError = async (userId, mediaId, commenterId, errorMessage, postRule, now) => {
   const subject = `🚨 DM Automation Failed for Media ${mediaId}`;
   const html = `
                         <h3>DM Automation Error</h3>
@@ -41,15 +41,15 @@ const sendDMError = async (userId, mediaId, commenterId, errorMessage, tokenDoc,
                       `;
 
   try {
-    const htmlContent = await sendEmail(tokenDoc.email, subject, html, { type: "DM_ERROR", userId, automationId: postRule._id });
-    logger.info(`DM Error email sent successfully to ${tokenDoc.email} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
+    const htmlContent = await sendEmail(RECEIVING_EMAILID, subject, html, { type: "DM_ERROR", userId, automationId: postRule._id });
+    logger.info(`DM Error email sent successfully to ${RECEIVING_EMAILID} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
     return htmlContent;
   } catch (error) {
     throw error;
   }
 };
 
-const sendReplyError = async (userId, mediaId, commenterId, errorMessage, tokenDoc, postRule, now) => {
+const sendReplyError = async (userId, mediaId, commenterId, errorMessage, postRule, now) => {
   const subject = `🚨 Reply Automation Failed for Media ${mediaId}`;
   const html = `
                     <h3>Reply Automation Error</h3>
@@ -61,8 +61,8 @@ const sendReplyError = async (userId, mediaId, commenterId, errorMessage, tokenD
                     <hr><p>This is sent only once until resolved.</p>
                   `;
   try {
-    const htmlContent = await sendEmail(tokenDoc.email, subject, html, { type: "REPLY_ERROR", userId, automationId: postRule._id });
-    logger.info(`Reply Error email sent successfully to ${tokenDoc.email} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
+    const htmlContent = await sendEmail(RECEIVING_EMAILID, subject, html, { type: "REPLY_ERROR", userId, automationId: postRule._id });
+    logger.info(`Reply Error email sent successfully to ${RECEIVING_EMAILID} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
     return htmlContent;
   } catch (error) {
     throw error;
