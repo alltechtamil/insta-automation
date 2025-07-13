@@ -3,7 +3,7 @@ const { MAILER_EMAILID, RECEIVING_EMAILID } = require("../config/envConfig");
 const logger = require("../utils/logger");
 
 const sendEmail = async (subject, htmlContent, contextForLog = {}) => {
-  if (!to || !subject || !htmlContent) {
+  if (!subject || !htmlContent) {
     logger.error("sendEmail called with missing parameters.", { subject: !!subject, html: !!htmlContent, contextForLog });
     throw new Error("sendEmail called with missing parameters.");
   }
@@ -16,10 +16,10 @@ const sendEmail = async (subject, htmlContent, contextForLog = {}) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email sent successfully to ${to} with subject "${subject}". Message ID: ${info.messageId}`, contextForLog);
+    logger.info(`Email sent successfully to ${RECEIVING_EMAILID} with subject "${subject}". Message ID: ${info.messageId}`, contextForLog);
     return info;
   } catch (error) {
-    logger.error(`Email sending failed for recipient ${to} with subject "${subject}": ${error.message}`, {
+    logger.error(`Email sending failed for recipient ${RECEIVING_EMAILID} with subject "${subject}": ${error.message}`, {
       stack: error.stack,
       mailOptions,
       contextForLog,
@@ -41,7 +41,7 @@ const sendDMError = async (userId, mediaId, commenterId, errorMessage, postRule,
                       `;
 
   try {
-    const htmlContent = await sendEmail(RECEIVING_EMAILID, subject, html, { type: "DM_ERROR", userId, automationId: postRule._id });
+    const htmlContent = await sendEmail(subject, html, { type: "DM_ERROR", userId, automationId: postRule._id });
     logger.info(`DM Error email sent successfully to ${RECEIVING_EMAILID} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
     return htmlContent;
   } catch (error) {
@@ -61,7 +61,7 @@ const sendReplyError = async (userId, mediaId, commenterId, errorMessage, postRu
                     <hr><p>This is sent only once until resolved.</p>
                   `;
   try {
-    const htmlContent = await sendEmail(RECEIVING_EMAILID, subject, html, { type: "REPLY_ERROR", userId, automationId: postRule._id });
+    const htmlContent = await sendEmail(subject, html, { type: "REPLY_ERROR", userId, automationId: postRule._id });
     logger.info(`Reply Error email sent successfully to ${RECEIVING_EMAILID} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
     return htmlContent;
   } catch (error) {
