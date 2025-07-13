@@ -100,7 +100,7 @@ const postWebhook = async (req, res) => {
           logger.info(`⏳ DM cooldown active. Skipping DM for commenter ${commenterId}`);
         } else {
           try {
-            const dmUrl = `https://graph.facebook.com/v18.0/${tokenDoc.facebookUserId}/messages`;
+            const dmUrl = `https://graph.facebook.com/v23.0/${tokenDoc.facebookUserId}/messages`;
             const dmPayload = {
               recipient: { comment_id: commentId },
               message: { text: dmText },
@@ -180,7 +180,7 @@ const postWebhook = async (req, res) => {
           logger.info(`⏳ Reply cooldown active. Skipping reply for commenter ${commenterId}`);
         } else {
           try {
-            const commentUrl = `https://graph.facebook.com/v18.0/${mediaId}/comments`;
+            const commentUrl = `https://graph.facebook.com/v23.0/${mediaId}/comments`;
             const commentPayload = { message: replyText };
 
             const commentResponse = await axios.post(commentUrl, commentPayload, { headers: authHeader });
