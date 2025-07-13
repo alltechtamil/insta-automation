@@ -217,7 +217,7 @@ sendEmail(`🚨 DM Automation Failed for Media Full  - ${mediaId}`,
             const alreadyNotified = postRule.lastReplyErrorNotificationSentAt && postRule.lastReplyErrorNotificationSentAt.getTime() === postRule.lastReplyErrorAt.getTime();
 
             if (!alreadyNotified) {
-              await sendReplyError(userId, mediaId, commenterId, errorMessage, , postRule, now);
+              await sendReplyError(userId, mediaId, commenterId, errorMessage, postRule, now);
               postRule.lastReplyErrorNotificationSentAt = now;
             }
 
