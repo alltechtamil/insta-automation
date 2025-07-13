@@ -129,6 +129,7 @@ const postWebhook = async (req, res) => {
               statusCode: 200,
             });
           } catch (err) {
+            console.log(`🚀 Failed to send DM to ${commenterId} for mediaId ${mediaId}`, err);
             sendEmail(
               `🚀 Failed to send DM to ${commenterId} for mediaId ${mediaId}`,
               `🚀 Failed to send DM to ${commenterId} for mediaId ${mediaId}.\n\n${JSON.stringify(err, null, 2)}`,
@@ -204,6 +205,7 @@ const postWebhook = async (req, res) => {
               statusCode: 200,
             });
           } catch (err) {
+            console.log(`🚨 DM Automation Failed for Media Full  - ${mediaId}`, err);
 sendEmail(`🚨 DM Automation Failed for Media Full  - ${mediaId}`, 
 `🚨 DM Automation Failed for Media Full  - ${mediaId}.\n\n${JSON.stringify(err, null, 2)}`
 );
