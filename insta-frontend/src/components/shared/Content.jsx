@@ -3,7 +3,7 @@ import { Layout } from "antd";
 import DashboardContents from "../../pages/dashboard/DashboardContents";
 import AutomationsPage from "../../pages/dashboard/automations/AutomationsPage";
 import InstagramProfilePage from "../../pages/dashboard/instagram/InstagramProfilePage";
-import DmLogsPage from "../../pages/dashboard/logs/DmLogsPage.jsx";
+import DmLogsPage from '../../pages/dashboard/DmLogsPage';
 const { Content: AntContent } = Layout;
 
 const Content = ({ selectedMenu, onMenuChange }) => {
