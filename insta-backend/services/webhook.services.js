@@ -145,12 +145,18 @@ const postWebhook = async (req, res) => {
       // === 🚀 Reply Block ===
       if (postRule.isReply && (postRule.maxReplies === null || postRule.sentReplies < postRule.maxReplies)) {
         try {
-          const replyUrl = `https://graph.facebook.com/v18.0/${commentId}/replies`;
-          const replyPayload = { message: replyText };
+          // Replace commentId with mediaId (from the webhook)
+          const commentUrl = `https://graph.facebook.com/v18.0/${mediaId}/comments`;
+          const commentPayload = { message: replyText };
 
-          const replyResponse = await axios.post(replyUrl, replyPayload, { headers: authHeader });
-
-          logger.info(`✅ Comment reply sent. Reply ID: ${replyResponse.data.id}`);
+          try {
+            const commentResponse = await axios.post(commentUrl, commentPayload, { headers: authHeader });
+            logger.info(`✅ Comment sent. Comment ID: ${commentResponse.data.id}`);
+          } catch (error) {
+            console.log("%c Line:156 🥕 error", "color:#e41a6a", error);
+            const errData = error.response?.data || error.message;
+            logger.error("❌ Failed to send comment:", errData);
+          }
 
           postRule.sentReplies += 1;
           await postRule.save();
