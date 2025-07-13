@@ -18,6 +18,7 @@ const InstagramProfilePage = () => {
         setFetching(true);
         try {
             const res = await axios.get('/auth/profile');
+            console.log("%c Line:21 🍺 res", "color:#ea7e5c", res);
             const { username, name, profile_picture_url } = res.data;
             setProfile({
                 username,
