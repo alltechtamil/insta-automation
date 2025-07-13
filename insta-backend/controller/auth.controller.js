@@ -9,7 +9,6 @@ const logger = require("../utils/logger");
 const login = (req, res) => {
   const clientId = INSTAGRAM_APP_ID;
   console.log("%c Line:11 🍧 INSTAGRAM_APP_ID", "color:#ed9ec7", INSTAGRAM_APP_ID);
-  console.log("%c Line:11 🥥 clientId", "color:#f5ce50", clientId);
   const redirectUri = INSTAGRAM_REDIRECT_URI;
   console.log("%c Line:14 🥛 redirectUri", "color:#3f7cff", redirectUri);
   const scopes = ["instagram_business_basic", "instagram_business_manage_messages", "instagram_business_manage_comments", "instagram_business_content_publish"];

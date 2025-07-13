@@ -1,4 +1,4 @@
-export const BACKEND_API_URL = "https://3eeec53a3317.ngrok-free.app";
+export const BACKEND_API_URL = "https://dm-manager-backend.onrender.com";
 
 export function assertEnv() {
   if (!BACKEND_API_URL) {

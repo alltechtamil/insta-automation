@@ -48,6 +48,8 @@ const postWebhook = async (req, res) => {
       // 🔍 Look up token to get internal userId
       const tokenDoc = await InstagramToken.findOne({ instagramAccountId });
 
+      console.log("tokenDoc: ", tokenDoc);
+
       if (!tokenDoc) {
         logger.warn(`⚠️ No InstagramToken found for instagramAccountId: ${instagramAccountId}`);
         continue;
@@ -85,10 +87,16 @@ const postWebhook = async (req, res) => {
         "Content-Type": "application/json",
       };
 
+      console.log("authHeader: ", authHeader);
+      console.log("mediaId: ", mediaId);
+      console.log("commentId: ", commentId);
+      console.log("tokenDoc: ", tokenDoc);
+
       // === 🚀 DM Block ===
       if (postRule.isDM && (postRule.maxDMs === null || postRule.sentDMs < postRule.maxDMs)) {
         try {
           const dmUrl = `https://graph.facebook.com/v18.0/${tokenDoc.facebookUserId}/messages`;
+
           const dmPayload = {
             recipient: { comment_id: commentId },
             message: { text: dmText },
@@ -185,7 +193,6 @@ const postWebhook = async (req, res) => {
 };
 
 module.exports = { getWebhook, postWebhook };
-
 
 // const { default: axios } = require("axios");
 // const { VERIFY_TOKEN, FACEBOOK_API_URL } = require("../config/envConfig");
