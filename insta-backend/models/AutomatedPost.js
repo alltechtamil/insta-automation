@@ -84,6 +84,26 @@ const AutomatedPostSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    lastDMErrorAt: {
+      type: Date,
+      default: null,
+    },
+    lastDMErrorNotificationSentAt: {
+      type: Date,
+      default: null,
+    },
+    lastReplyErrorAt: {
+      type: Date,
+      default: null,
+    },
+    lastReplyErrorNotificationSentAt: {
+      type: Date,
+      default: null,
+    },
+    isErrorResolved: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

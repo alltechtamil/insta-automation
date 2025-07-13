@@ -22,8 +22,6 @@ const DashBoardLayout = () => {
     navigate('/');
   };
 
-
-
   return (
     <Layout className="h-screen rounded-lg bg-[#F5F5F5] overflow-hidden shadow-lg md:p-1 p-0">
       <Sidebar onSelectMenu={handleMenuClick} selectedKey={selectedMenu} />

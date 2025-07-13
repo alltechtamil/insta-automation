@@ -1,35 +1,31 @@
-// sendReply.js — for Instagram
 const axios = require("axios");
 
-/**
- * Posts a new comment on a media item (Instagram only supports top-level comments)
- *
- * @param {string} mediaId - The ID of the media item (reel/photo/etc)
- * @param {string} message - The reply message
- * @param {string} igAccessToken - The Instagram account's long-lived access token
- */
-async function sendReply(mediaId, message, igAccessToken) {
-  const url = `https://graph.facebook.com/v18.0/${mediaId}/comments`;
+const commentId = "18105426286482122";
+const accessToken =
+  "EAAJZBumxZBLCcBPO6OrVcRZCW5AZCrSpFw7dlJemItvabwVQPMevZCPmxD6upSQadx9qwx0eNv6nUIDKiUd91SPKsLiZBwU0xrmfZBQ3UKyA0OrBKavsn628MFxZAu3y4TfIp7ChfFdGf7uI0toA2UByTmdPVhbe7z2rKvpWSOqvPAGzZBdrJ7AsSE72f59TNwbqqToiq5hCvxHmyyZAntaKWaPmfJ"; // Your actual token
 
-  try {
-    const response = await axios.post(
-      url,
-      { message },
+const sendReply = async () => {
+  axios
+    .post(
+      `https://graph.facebook.com/v23.0/${commentId}/replies`,
       {
+        message: "Thanks for your comment! 🔥",
+      },
+      {
+        params: {
+          access_token: accessToken,
+        },
         headers: {
-          Authorization: `Bearer ${igAccessToken}`,
           "Content-Type": "application/json",
         },
       }
-    );
-
-    console.log("✅ Comment sent:", response.data);
-    return response.data;
-  } catch (error) {
-    const errData = error.response?.data || error.message;
-    console.error("❌ Failed to send comment:", errData);
-    throw errData;
-  }
-}
+    )
+    .then((response) => {
+      console.log("✅ Replied successfully:", response.data);
+    })
+    .catch((error) => {
+      console.error("❌ Error replying:", error.response?.data || error.message);
+    });
+};
 
 module.exports = sendReply;

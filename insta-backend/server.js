@@ -19,9 +19,8 @@ const commentRoutes = require("./routes/comment.routes");
 const privateReplyRoutes = require("./routes/privateReply.routes");
 const automatedPostRoutes = require("./routes/automatedPost.routes");
 const dmLogRoutes = require("./routes/dmLog.routes");
-
-const { sendInstagramDM } = require("./sendDM");
-const sendReply = require("./sendReply");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const { checkEmailConnection } = require("./config/email.config");
 
 const app = express();
 
@@ -47,6 +46,7 @@ app.use("/comment", commentRoutes);
 app.use("/private-reply", privateReplyRoutes);
 app.use("/automated-post", automatedPostRoutes);
 app.use("/dm-log", dmLogRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   logger.info("GET / - root route hit");
@@ -66,11 +66,7 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   connectDB();
-  // sendReply(
-  //   "18139398340411605",
-  //   "Test",
-  //   "EAAJZBumxZBLCcBPF42w3lZC5bq4sgnG0ItQaVKl0SZCZCfKPeYEV08ouAwuucjWiMtwYYVvpUTUvJUhbFYs3ICeKYLboMF6iCaj8pfxc9KKeCx4wsJ2UBObBZBD1AVZCMwinquGRW8T2YqgxMz7ySEU844vv9hGIEeAruYcOnvJxX4uZCg91Op9nMtb0Pz5Qztl6kZCKjAPyeq3AuE9L03r5ZCP41X"
-  // );
+  checkEmailConnection();
   logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
   logger.info(`🔗 http://localhost:${PORT}`);
 });
