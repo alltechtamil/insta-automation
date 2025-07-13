@@ -6,10 +6,10 @@ const routes = [
   {
     path: "/",
     element: <LoginPage />,
-    protected: false
+    protected: false,
   },
   {
-    path: "/dashboard/*", // Use a wildcard to handle nested dashboard routes
+    path: "/dashboard/*",
     element: <DashBoardLayout />,
     protected: true,
   },
