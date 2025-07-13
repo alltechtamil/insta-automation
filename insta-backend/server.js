@@ -66,11 +66,11 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   connectDB();
-  sendReply(
-    "18139398340411605",
-    "Test",
-    "EAAJZBumxZBLCcBPF42w3lZC5bq4sgnG0ItQaVKl0SZCZCfKPeYEV08ouAwuucjWiMtwYYVvpUTUvJUhbFYs3ICeKYLboMF6iCaj8pfxc9KKeCx4wsJ2UBObBZBD1AVZCMwinquGRW8T2YqgxMz7ySEU844vv9hGIEeAruYcOnvJxX4uZCg91Op9nMtb0Pz5Qztl6kZCKjAPyeq3AuE9L03r5ZCP41X"
-  );
+  // sendReply(
+  //   "18139398340411605",
+  //   "Test",
+  //   "EAAJZBumxZBLCcBPF42w3lZC5bq4sgnG0ItQaVKl0SZCZCfKPeYEV08ouAwuucjWiMtwYYVvpUTUvJUhbFYs3ICeKYLboMF6iCaj8pfxc9KKeCx4wsJ2UBObBZBD1AVZCMwinquGRW8T2YqgxMz7ySEU844vv9hGIEeAruYcOnvJxX4uZCg91Op9nMtb0Pz5Qztl6kZCKjAPyeq3AuE9L03r5ZCP41X"
+  // );
   logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
   logger.info(`🔗 http://localhost:${PORT}`);
 });
