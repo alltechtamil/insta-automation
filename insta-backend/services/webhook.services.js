@@ -3,7 +3,6 @@ const { VERIFY_TOKEN } = require("../config/envConfig");
 const InstagramToken = require("../models/InstagramToken");
 const AutomatedPost = require("../models/AutomatedPost");
 const DMLog = require("../models/DMLog");
-const logger = require("../utils/logger");
 const { sendAutomationPausedNotification } = require("./email.service");
 const SystemSetting = require("../models/SystemSetting");
 
@@ -27,7 +26,7 @@ const processQueue = async () => {
       await new Promise((resolve) => setTimeout(resolve, delay));
       await queuedAction();
     } catch (err) {
-      logger.error("❌ Error processing queued action:", err);
+      console.error("❌ Error processing queued action:", err);
     }
   }
 
@@ -52,7 +51,7 @@ const sendDirectMessage = async (data) => {
       headers: { "Content-Type": "application/json" },
     });
 
-    logger.info(`✅ DM sent: ${dmResponse.data.message_id}`);
+    console.log(`✅ DM sent: ${dmResponse.data.message_id}`);
 
     postRule.sentDMs += 1;
     postRule.lastDMErrorAt = null;
@@ -78,7 +77,7 @@ const sendDirectMessage = async (data) => {
   } catch (err) {
     const errorMessage = err.response?.data?.error?.message || err.message;
     const status = err.response?.status;
-    logger.error(`❌ DM send error: ${errorMessage}`);
+    console.error(`❌ DM send error: ${errorMessage}`);
 
     postRule.lastDMErrorAt = now;
 
@@ -95,7 +94,7 @@ const sendDirectMessage = async (data) => {
         postRule.pauseNotificationSentAt = now;
       }
 
-      logger.warn(`⏸ Automation ${postRule._id} paused for violation: ${errorMessage}`);
+      console.warn(`⏸ Automation ${postRule._id} paused for violation: ${errorMessage}`);
     }
 
     await postRule.save();
@@ -131,7 +130,7 @@ const sendReply = async (data) => {
       headers: { "Content-Type": "application/json" },
     });
 
-    logger.info(`✅ Reply posted via /replies: ${replyResponse.data.id}`);
+    console.log(`✅ Reply posted via /replies: ${replyResponse.data.id}`);
 
     postRule.sentReplies += 1;
     postRule.lastReplyErrorAt = null;
@@ -157,7 +156,7 @@ const sendReply = async (data) => {
   } catch (err) {
     const errorMessage = err.response?.data?.error?.message || err.message;
     const status = err.response?.status;
-    logger.error(`❌ Reply send error: ${errorMessage}`);
+    console.error(`❌ Reply send error: ${errorMessage}`);
 
     postRule.lastReplyErrorAt = now;
 
@@ -173,7 +172,7 @@ const sendReply = async (data) => {
         postRule.pauseNotificationSentAt = now;
       }
 
-      logger.warn(`⏸ Automation ${postRule._id} paused for violation: ${errorMessage}`);
+      console.warn(`⏸ Automation ${postRule._id} paused for violation: ${errorMessage}`);
     }
 
     await postRule.save();
@@ -201,7 +200,7 @@ const getWebhook = (req, res) => {
   const challenge = req.query["hub.challenge"];
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    logger.info("WEBHOOK_VERIFIED");
+    console.log("WEBHOOK_VERIFIED");
     return res.status(200).send(challenge);
   }
   res.sendStatus(403);
@@ -209,7 +208,7 @@ const getWebhook = (req, res) => {
 
 const postWebhook = async (req, res) => {
   try {
-    logger.info("Received Webhook:", JSON.stringify(req.body, null, 2));
+    console.log("Received Webhook:", JSON.stringify(req.body, null, 2));
     const entries = req.body.entry || [];
 
     for (const entry of entries) {
@@ -228,47 +227,47 @@ const postWebhook = async (req, res) => {
         const instagramAccountId = entry.id;
         const now = new Date();
 
-        logger.debug(`📩 Comment: "${text}" on media ${mediaId} from user ${commenterId}`);
-        logger.debug(`📷 Instagram Account ID: ${instagramAccountId}`);
+        console.log(`📩 Comment: "${text}" on media ${mediaId} from user ${commenterId}`);
+        console.log(`📷 Instagram Account ID: ${instagramAccountId}`);
 
         if (commenterId === instagramAccountId) {
-          logger.info("👻 Skipping bot's own comment.");
+          console.log("👻 Skipping bot's own comment.");
           continue;
         }
 
         const tokenDoc = await InstagramToken.findOne({ instagramAccountId });
         if (!tokenDoc) {
-          logger.warn(`⚠️ No token found for IG account: ${instagramAccountId}`);
+          console.warn(`⚠️ No token found for IG account: ${instagramAccountId}`);
           continue;
         }
 
         const userId = tokenDoc.userId;
-        logger.debug(`✅ IG Account ${instagramAccountId} mapped to User ${userId}`);
+        console.log(`✅ IG Account ${instagramAccountId} mapped to User ${userId}`);
 
         const postRule = await AutomatedPost.findOne({ mediaId, userId, isEnabled: true });
-        logger.debug(`🎯 Rule lookup: ${postRule ? "FOUND" : "NOT FOUND"}`);
+        console.log(`🎯 Rule lookup: ${postRule ? "FOUND" : "NOT FOUND"}`);
         if (!postRule) continue;
 
         // Check active dates
         if ((postRule.startDate && now < postRule.startDate) || (postRule.endDate && now > postRule.endDate)) {
-          logger.info(`⏰ Rule is outside active window.`);
+          console.log(`⏰ Rule is outside active window.`);
           continue;
         }
 
         // Check if automation is paused
         if (postRule.pausedUntil && now < postRule.pausedUntil) {
-          logger.info(`🛑 Automation paused until ${postRule.pausedUntil}. Skipping.`);
+          console.log(`🛑 Automation paused until ${postRule.pausedUntil}. Skipping.`);
           continue;
         }
 
         // Find matching keyword (case-insensitive)
         const matchedKeyword = postRule.keywords.find((kw) => text.includes(kw.toLowerCase()));
         if (!matchedKeyword) {
-          logger.info(`🛑 No keywords matched in comment.`);
+          console.log(`🛑 No keywords matched in comment.`);
           continue;
         }
 
-        logger.info(`✅ Matched keyword: "${matchedKeyword}"`);
+        console.log(`✅ Matched keyword: "${matchedKeyword}"`);
 
         const dmText = postRule.replyMessage;
         const replyText = postRule.replyComment || postRule.replyMessage;
@@ -284,7 +283,7 @@ const postWebhook = async (req, res) => {
           });
 
           if (recentDM) {
-            logger.info(`⏳ DM cooldown active. Skipping DM for ${commenterId}`);
+            console.log(`⏳ DM cooldown active. Skipping DM for ${commenterId}`);
           } else {
             actionQueue.push(() =>
               sendDirectMessage({
@@ -312,7 +311,7 @@ const postWebhook = async (req, res) => {
           });
 
           if (recentReply) {
-            logger.info(`⏳ Reply cooldown active. Skipping reply for ${commenterId}`);
+            console.log(`⏳ Reply cooldown active. Skipping reply for ${commenterId}`);
           } else {
             actionQueue.push(() =>
               sendReply({
@@ -333,12 +332,12 @@ const postWebhook = async (req, res) => {
 
     // Process queue in background
     if (actionQueue.length > 0 && !isProcessingQueue) {
-      processQueue().catch((err) => logger.error("Queue processing error:", err));
+      processQueue().catch((err) => console.error("Queue processing error:", err));
     }
 
     res.sendStatus(200);
   } catch (err) {
-    logger.error("❌ Unhandled webhook error:", err.message);
+    console.error("❌ Unhandled webhook error:", err.message);
     res.sendStatus(500);
   }
 };
