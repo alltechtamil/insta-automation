@@ -69,8 +69,21 @@ const sendReplyError = async (userId, mediaId, commenterId, errorMessage, postRu
   }
 };
 
+const sendAutomationPausedNotification = async (automation, reason) => {
+  const subject = `⏸ Automation Paused: ${automation.postCaption || automation._id}`;
+  const html = `
+    <h3>Automation Paused Due to Error</h3>
+    <p><strong>Automation ID:</strong> ${automation._id}</p>
+    <p><strong>Reason:</strong> ${reason}</p>
+    <p><strong>Paused Until:</strong> ${automation.pausedUntil?.toLocaleString()}</p>
+  `;
+
+  return await sendEmail(subject, html, { type: "AUTOMATION_PAUSED", automationId: automation._id });
+};
+
 module.exports = {
   sendEmail,
   sendDMError,
   sendReplyError,
+  sendAutomationPausedNotification,
 };

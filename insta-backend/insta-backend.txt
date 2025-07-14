@@ -7,102 +7,22 @@ Start of Codebase
 ================================================================
 
 ================================================
-FILE: routes/webhook.routes.js
-================================================
-const express = require("express");
-const { getWebhook, postWebhook } = require("../services/webhook.services");
-const router = express.Router();
-router.get("/", getWebhook);
-router.post("/", postWebhook);
-module.exports = router;
-
-================================================
-FILE: services/auth.services.js
-================================================
-const axios = require("axios");
-const InstagramToken = require("../models/InstagramToken");
-const logger = require("../utils/logger");
-async function saveInstagramToken({ userId, accessToken, tokenType, expiresIn }) {
-  const tokenData = {
-    userId,
-    accessToken,
-    tokenType,
-    expiresIn,
-  };
-  try {
-    const existing = await InstagramToken.findOne({ userId });
-    logger.debug(`Saving Instagram Token: ${JSON.stringify(tokenData, null, 2)}`);
-    if (existing) {
-      existing.accessToken = accessToken;
-      existing.tokenType = tokenType;
-      existing.expiresIn = expiresIn;
-      await existing.save();
-      return existing;
-    } else {
-      const newToken = new InstagramToken(tokenData);
-      await newToken.save();
-      return newToken;
-    }
-  } catch (error) {
-    console.error("Error saving Instagram Token:", error);
-    logger.error(`Error saving Instagram Token: ${error.message}`);
-    throw error;
-  }
-}
-async function getInstagramProfile(accessToken) {
-  try {
-    const response = await axios.get("https:
-      params: {
-        fields: "id,username,name,user_id,account_type,profile_picture_url,followers_count,follows_count,media_count",
-        access_token: accessToken,
-      },
-    });
-    logger.debug(`Fetched Instagram Profile: ${JSON.stringify(response.data, null, 2)}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching Instagram profile:", error.response?.data || error.message);
-    logger.error(`Error fetching Instagram profile: ${error.response?.data || error.message}`);
-    throw error;
-  }
-}
-module.exports = { saveInstagramToken, getInstagramProfile };
-
-================================================
-FILE: services/webhook.services.js
-================================================
-const { VERIFY_TOKEN } = require("../config/envConfig");
-const logger = require("../utils/logger");
-const getWebhook = (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-  if (mode && token && mode === "subscribe" && token === VERIFY_TOKEN) {
-    logger.info("WEBHOOK_VERIFIED");
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
-};
-const postWebhook = (req, res) => {
-  logger.info("Received Webhook:", JSON.stringify(req.body, null, 2));
-  res.sendStatus(200);
-};
-module.exports = { getWebhook, postWebhook };
-
-================================================
 FILE: .env
 ================================================
 PORT=8080
-INSTAGRAM_APP_ID=1804627046790403
-INSTAGRAM_APP_SECRET=ac3839d4de78ee5f7666700b561ac8e5
-INSTAGRAM_REDIRECT_URI=https://fb60de7b6ce5.ngrok-free.app/auth/callback
-
+INSTAGRAM_APP_ID=1444261800105048
+INSTAGRAM_APP_SECRET=f871f4fdf8d5904abd54f3544d268e8b
+INSTAGRAM_REDIRECT_URI=https://dm-manager-backend.onrender.com/auth/callback
 VERIFY_TOKEN=alltechtamil123
 FACEBOOK_API_URL=https://graph.facebook.com/v23.0
 FRONTEND_URL=http://localhost:5173
 JWT_SECRET=MaThanMiThun@1999
 MONGODB_URI=mongodb+srv://alltechtamilblogger:sy1cpUPULloM5wal@cluster0.xgz8z.mongodb.net/insta_automation?retryWrites=true&w=majority&appName=Cluster0
 NODE_ENV=development
+MAILER_EMAILID=namakkaldt123@gmail.com
+MAILER_PASSWORD=qjthxmibauetfldf
+RECEIVING_EMAILID=mathanmithun8838@gmail.com
+
 ================================================
 FILE: config/db.js
 ================================================
@@ -122,6 +42,40 @@ const connectDB = async () => {
 module.exports = connectDB;
 
 ================================================
+FILE: config/email.config.js
+================================================
+const nodemailer = require("nodemailer");
+const logger = require("../utils/logger");
+const { MAILER_EMAILID, MAILER_PASSWORD, RECEIVING_EMAILID } = require("./envConfig");
+if (!MAILER_EMAILID || !MAILER_PASSWORD) {
+  logger.error("Email credentials missing in environment variables");
+  process.exit(1);
+}
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: MAILER_EMAILID,
+    pass: MAILER_PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: true,
+  },
+});
+async function checkEmailConnection() {
+  try {
+    await transporter.verify();
+    logger.info(`Email server connection successful to ${RECEIVING_EMAILID}`);
+  } catch (error) {
+    logger.error(`Email server connection error: ${error}`);
+    process.exit(1);
+  }
+}
+module.exports = {
+  transporter,
+  checkEmailConnection,
+};
+
+================================================
 FILE: config/envConfig.js
 ================================================
 const dotenv = require("dotenv");
@@ -137,6 +91,10 @@ const envConfig = {
   JWT_SECRET: process.env.JWT_SECRET || "MaThanMiThun@1999",
   NODE_ENV: process.env.NODE_ENV || "development",
   MONGODB_URI: process.env.MONGODB_URI || "mongodb:
+  FACEBOOK_API_URL: process.env.FACEBOOK_API_URL || "https:
+  MAILER_EMAILID: process.env.MAILER_EMAILID || "namakkaldt123@gmail.com",
+  MAILER_PASSWORD: process.env.MAILER_PASSWORD || "qjthxmibauetfldf",
+  RECEIVING_EMAILID: process.env.RECEIVING_EMAILID || "mathanmithun8838@gmail.com",
 };
 logger.debug(`Environment Config: ${JSON.stringify(envConfig, null, 2)}`);
 module.exports = envConfig;
@@ -153,13 +111,17 @@ const InstagramToken = require("../models/InstagramToken");
 const logger = require("../utils/logger");
 const login = (req, res) => {
   const clientId = INSTAGRAM_APP_ID;
+  console.log("%c Line:11 🍧 INSTAGRAM_APP_ID", "color:
   const redirectUri = INSTAGRAM_REDIRECT_URI;
+  console.log("%c Line:14 🥛 redirectUri", "color:
   const scopes = ["instagram_business_basic", "instagram_business_manage_messages", "instagram_business_manage_comments", "instagram_business_content_publish"];
   const authUrl = `https:
   res.redirect(authUrl);
 };
 const getInstaToken = async (req, res) => {
   const { code } = req.query;
+  console.log("%c Line:22 🍎 code", "color:
+  console.log("%c Line:33 🍿 INSTAGRAM_REDIRECT_URI", "color:
   try {
     const tokenRes = await axios.post(
       "https:
@@ -219,6 +181,531 @@ module.exports = {
   getInstaToken,
   getProfile,
 };
+
+================================================
+FILE: controller/automatedPostController.js
+================================================
+const AutomatedPost = require("../models/AutomatedPost");
+const createAutomatedPost = async (req, res) => {
+  const userId = req.userId;
+  try {
+    const newPost = await AutomatedPost.create({
+        userId,
+        ...req.body,
+    });
+    console.log('newPost: ', newPost);
+    res.status(201).json(newPost);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+const getAllAutomatedPosts = async (req, res) => {
+  try {
+    const filter = {};
+    if (req.query.userId) {
+      filter.userId = req.query.userId;
+    }
+    const posts = await AutomatedPost.find(filter);
+    console.log('posts: ', posts);
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch automated posts." });
+  }
+};
+const getAutomatedPostById = async (req, res) => {
+  try {
+    const post = await AutomatedPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch post." });
+  }
+};
+const updateAutomatedPost = async (req, res) => {
+  try {
+    const updated = await AutomatedPost.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ error: "Post not found." });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+const deleteAutomatedPost = async (req, res) => {
+  try {
+    const deleted = await AutomatedPost.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Post not found." });
+    res.json({ message: "Post deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete post." });
+  }
+};
+const togglePostStatus = async (req, res) => {
+  try {
+    const post = await AutomatedPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    post.isEnabled = !post.isEnabled;
+    await post.save();
+    res.json({ id: post._id, isEnabled: post.isEnabled });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to toggle status." });
+  }
+};
+module.exports = {
+  createAutomatedPost,
+  getAllAutomatedPosts,
+  getAutomatedPostById,
+  updateAutomatedPost,
+  deleteAutomatedPost,
+  togglePostStatus,
+};
+
+================================================
+FILE: controller/comment.controller.js
+================================================
+const axios = require("axios");
+const InstagramToken = require("../models/InstagramToken");
+const logger = require("../utils/logger");
+const { FACEBOOK_API_URL } = require("../config/envConfig");
+const getComments = async (req, res) => {
+  const { mediaId } = req.params;
+  const userId = req.userId;
+  try {
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    if (!tokenDoc || !tokenDoc.pageLongAccessToken) {
+      return res.status(404).json({ error: "Access token not found" });
+    }
+    const url = `${FACEBOOK_API_URL}/${mediaId}/comments`;
+    const response = await axios.get(url, {
+      params: {
+        access_token: tokenDoc.pageLongAccessToken,
+      },
+    });
+    res.json(response.data);
+  } catch (err) {
+    console.log("%c Line:27 🍯 err", "color:
+    logger.error(`Error getting comments: ${err.message}`);
+    res.status(500).json({ message: "Failed to get comments", error: err });
+  }
+};
+const replyToComment = async (req, res) => {
+  const { commentId } = req.params;
+  const { message } = req.body;
+  const userId = req.userId;
+  if (!commentId) {
+    return res.status(400).json({ error: "Comment ID is required" });
+  }
+  if (!message) {
+    return res.status(400).json({ error: "Reply message is required" });
+  }
+  try {
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    console.log("%c Line:44 🍐 tokenDoc", "color:
+    if (!tokenDoc || !tokenDoc.pageLongAccessToken) {
+      return res.status(404).json({ error: "Access token not found" });
+    }
+    const url = `${FACEBOOK_API_URL}/${commentId}/replies`;
+    const response = await axios.post(
+      url,
+      { message },
+      {
+        params: {
+          access_token: tokenDoc.pageLongAccessToken,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    res.json({ message: "Replied successfully", replyId: response.data.id });
+  } catch (err) {
+    logger.error(`Error replying to comment: ${err.message}`);
+    res.status(500).json({ message: "Failed to reply to comment", error: err });
+  }
+};
+module.exports = {
+  getComments,
+  replyToComment,
+};
+
+================================================
+FILE: controller/dashboard.controller.js
+================================================
+const AutomatedPost = require("../models/AutomatedPost");
+const DMLog = require("../models/DMLog");
+const mongoose = require("mongoose");
+const getDashboardStats = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const [automations, dmLogs] = await Promise.all([AutomatedPost.find({ userId }), DMLog.find({ userId })]);
+    const totalAutomations = automations.length;
+    const activeAutomations = automations.filter((a) => a.isEnabled).length;
+    const inactiveAutomations = totalAutomations - activeAutomations;
+    const totalDMsSent = automations.reduce((sum, a) => sum + (a.sentDMs || 0), 0);
+    const totalRepliesSent = automations.reduce((sum, a) => sum + (a.sentReplies || 0), 0);
+    let successfulLogs = 0;
+    let failedLogs = 0;
+    let typeCount = { dm: 0, reply: 0 };
+    for (const log of dmLogs) {
+      if (log.sent) successfulLogs++;
+      else failedLogs++;
+      if (log.type === "dm") typeCount.dm++;
+      else if (log.type === "reply") typeCount.reply++;
+    }
+    const automationMap = {};
+    for (const log of dmLogs) {
+      const id = log.automationId?.toString();
+      if (!id) continue;
+      if (!automationMap[id]) {
+        automationMap[id] = {
+          automationId: id,
+          sentDMs: 0,
+          sentReplies: 0,
+          success: 0,
+          fails: 0,
+        };
+      }
+      if (log.sent) automationMap[id].success++;
+      else automationMap[id].fails++;
+      if (log.type === "dm") automationMap[id].sentDMs++;
+      else if (log.type === "reply") automationMap[id].sentReplies++;
+    }
+    const automationStats = automations.map((a) => {
+      const data = automationMap[a._id.toString()] || {
+        sentDMs: 0,
+        sentReplies: 0,
+        success: 0,
+        fails: 0,
+      };
+      return {
+        automationId: a._id,
+        caption: a.postCaption,
+        ...data,
+      };
+    });
+    const start = new Date();
+    start.setDate(start.getDate() - 6); 
+    const dailyLogs = await DMLog.aggregate([
+      {
+        $match: {
+          userId,
+          createdAt: { $gte: start },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            type: "$type",
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const dateMap = {};
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      dateMap[key] = { date: key, sentDMs: 0, sentReplies: 0 };
+    }
+    for (const entry of dailyLogs) {
+      const dateKey = entry._id.day;
+      if (!dateMap[dateKey]) continue;
+      if (entry._id.type === "dm") dateMap[dateKey].sentDMs = entry.count;
+      if (entry._id.type === "reply") dateMap[dateKey].sentReplies = entry.count;
+    }
+    const dailyStats = Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
+    res.json({
+      summary: {
+        totalAutomations,
+        activeAutomations,
+        inactiveAutomations,
+        totalDMsSent,
+        totalRepliesSent,
+      },
+      dmLogs: {
+        total: dmLogs.length,
+        successful: successfulLogs,
+        failed: failedLogs,
+        byType: typeCount,
+        byAutomation: automationStats,
+      },
+      dailyStats,
+    });
+  } catch (err) {
+    console.error("Error in getDashboardStats:", err.message);
+    res.status(500).json({ error: "Failed to fetch detailed dashboard stats." });
+  }
+};
+module.exports = { getDashboardStats };
+
+================================================
+FILE: controller/dmLogController.js
+================================================
+const DMLog = require("../models/DMLog");
+const logDMAction = async ({
+  userId,
+  mediaId,
+  mediaPermalink = null,
+  commentId,
+  commenterId,
+  matchedKeyword,
+  message,
+  type, 
+  automationId = null,
+  sent = false,
+  sentAt = null,
+  error = null,
+  statusCode = null,
+}) => {
+  try {
+    const log = await DMLog.create({
+      userId,
+      mediaId,
+      mediaPermalink,
+      commentId,
+      commenterId,
+      matchedKeyword,
+      message,
+      type,
+      automationId,
+      sent,
+      sentAt,
+      error,
+      statusCode,
+    });
+    return log;
+  } catch (err) {
+    console.error("❌ Failed to log DM action:", err.message);
+    return null;
+  }
+};
+const getDMLogs = async (req, res) => {
+  try {
+    const query = {};
+    if (req.query.userId) query.userId = req.query.userId;
+    if (req.query.mediaId) query.mediaId = req.query.mediaId;
+    if (req.query.type) query.type = req.query.type; 
+    const logs = await DMLog.find(query).sort({ createdAt: -1 });
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch logs" });
+  }
+};
+const getDMLogById = async (req, res) => {
+  try {
+    const log = await DMLog.findById(req.params.id);
+    if (!log) return res.status(404).json({ error: "Log not found." });
+    res.json(log);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch log." });
+  }
+};
+const deleteDMLog = async (req, res) => {
+  try {
+    const deleted = await DMLog.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Log not found." });
+    res.json({ message: "Log deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete log." });
+  }
+};
+module.exports = {
+  logDMAction,
+  getDMLogs,
+  getDMLogById,
+  deleteDMLog,
+};
+
+================================================
+FILE: controller/fbToken.controller.js
+================================================
+const InstagramToken = require("../models/InstagramToken");
+const logger = require("../utils/logger");
+const upsertFacebookFields = async (req, res) => {
+  const { facebookUserId, fbLongAccessToken, pageLongAccessToken, instagramAccountId } = req.body;
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized: Missing userId" });
+  }
+  try {
+    const updated = await InstagramToken.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          facebookUserId,
+          fbLongAccessToken,
+          pageLongAccessToken,
+          instagramAccountId,
+        },
+      },
+      { new: true, upsert: false }
+    );
+    if (!updated) {
+      return res.status(404).json({ error: "InstagramToken not found for this user" });
+    }
+    logger.info(`Updated Facebook fields for userId: ${userId}`);
+    res.json(updated);
+  } catch (err) {
+    logger.error(`Error updating Facebook fields: ${err.message}`);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+const getFacebookFields = async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized: Missing userId" });
+  }
+  try {
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    if (!tokenDoc) {
+      return res.status(404).json({ error: "No token found for this userId" });
+    }
+    const { facebookUserId, fbLongAccessToken, pageLongAccessToken, instagramAccountId } = tokenDoc;
+    res.json({ tokenDoc, facebookUserId, fbLongAccessToken, pageLongAccessToken, instagramAccountId });
+  } catch (err) {
+    logger.error(`Error fetching Facebook fields: ${err.message}`);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+const deleteFacebookFields = async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized: Missing userId" });
+  }
+  try {
+    const updated = await InstagramToken.findOneAndUpdate(
+      { userId },
+      {
+        $unset: {
+          facebookUserId: "",
+          fbLongAccessToken: "",
+          pageLongAccessToken: "",
+        },
+      },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ error: "No token found for this userId" });
+    }
+    res.json({ message: "Facebook fields removed", data: updated });
+  } catch (err) {
+    logger.error(`Error deleting Facebook fields: ${err.message}`);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+module.exports = {
+  upsertFacebookFields,
+  getFacebookFields,
+  deleteFacebookFields,
+};
+
+================================================
+FILE: controller/media.controller.js
+================================================
+const InstagramToken = require("../models/InstagramToken");
+const { fetchInstagramMedia, getFullMedia, getAPost } = require("../services/media.services");
+const logger = require("../utils/logger");
+const getMedia = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    if (!tokenDoc) {
+      return res.status(404).json({ error: "Access token not found" });
+    }
+    const media = await fetchInstagramMedia(userId, tokenDoc.accessToken);
+    res.json({ media });
+  } catch (err) {
+    logger.error("Failed to fetch Instagram media:", err.message);
+    res.status(500).json({ error: "Failed to fetch media" });
+  }
+};
+const getDetailedMedia = async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log('userId: ', userId);
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    console.log('tokenDoc: ', tokenDoc);
+    if (!tokenDoc) {
+      return res.status(404).json({ error: "Access token not found" });
+    }
+    const media = await getFullMedia(userId, tokenDoc.accessToken);
+    console.log('media: ', media);
+    res.json({ media });
+  } catch (error) {
+    console.log('error: ', error);
+    logger.error("Failed to fetch Instagram media:", error.message);
+    res.status(500).json({ error: "Failed to fetch media" });
+  }
+};
+const getAPostDetails = async (req, res) => {
+  const postId = req.params.postId;
+  if (!postId) {
+    return res.status(400).json({ error: "Post ID is required" });
+  }
+  try {
+    const userId = req.userId;
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    if (!tokenDoc) {
+      return res.status(404).json({ error: "Access token not found" });
+    }
+    const access_token = tokenDoc.fbLongAccessToken;
+    const media = await getAPost(postId, access_token);
+    res.json({ media });
+  } catch (error) {
+    logger.error("Failed to fetch Instagram media:", error.message);
+    res.status(500).json({ error: `Failed to fetch media`, error });
+  }
+};
+module.exports = { getMedia, getDetailedMedia, getAPostDetails };
+
+================================================
+FILE: controller/privateReply.controller.js
+================================================
+const axios = require("axios");
+const InstagramToken = require("../models/InstagramToken");
+const logger = require("../utils/logger");
+const { FACEBOOK_API_URL } = require("../config/envConfig");
+const sendPrivateReply = async (req, res) => {
+  const { commentId, message } = req.body;
+  console.log("req.body: ", req.body);
+  const userId = req.userId;
+  console.log("userId: ", userId);
+  if (!commentId || !message) {
+    return res.status(400).json({ error: "commentId and message are required" });
+  }
+  try {
+    const tokenDoc = await InstagramToken.findOne({ userId });
+    console.log("tokenDoc: ", tokenDoc);
+    if (!tokenDoc || !tokenDoc.pageLongAccessToken || !tokenDoc.facebookUserId) {
+      return res.status(404).json({ error: "Access token or user ID not found" });
+    }
+    const url = `${FACEBOOK_API_URL}/${tokenDoc.facebookUserId}/messages`;
+    const response = await axios.post(
+      url,
+      {
+        recipient: { comment_id: commentId },
+        message: { text: message },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${tokenDoc.pageLongAccessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    res.json({
+      message: "Private reply sent successfully",
+      recipientId: response.data.recipient_id,
+      messageId: response.data.message_id,
+    });
+  } catch (err) {
+    logger.error(`Error sending private reply: ${err.message}`);
+    console.error(err);
+    res.status(500).json({ error: "Failed to send private reply" });
+  }
+};
+module.exports = { sendPrivateReply };
 
 ================================================
 FILE: middleware/auth.js
@@ -285,6 +772,183 @@ const notFound = (req, res, next) => {
 module.exports = notFound;
 
 ================================================
+FILE: models/AutomatedPost.js
+================================================
+const mongoose = require("mongoose");
+const AutomatedPostSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    postCaption: {
+      type: String,
+      trim: true,
+    },
+    mediaId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    keywords: {
+      type: [String],
+      required: true,
+      validate: [(val) => val.length > 0, "At least one keyword is required."],
+    },
+    replyMessage: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    replyComment: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    isEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    isReply: {
+      type: Boolean,
+      default: true,
+    },
+    isDM: {
+      type: Boolean,
+      default: true,
+    },
+    maxReplies: {
+      type: Number,
+      default: null, 
+      min: 0,
+    },
+    maxDMs: {
+      type: Number,
+      default: null, 
+      min: 0,
+    },
+    sentReplies: {
+      type: Number,
+      default: 0,
+    },
+    sentDMs: {
+      type: Number,
+      default: 0,
+    },
+    startDate: {
+      type: Date,
+      default: null,
+    },
+    endDate: {
+      type: Date,
+      default: null,
+    },
+    lastDMErrorAt: {
+      type: Date,
+      default: null,
+    },
+    lastDMErrorNotificationSentAt: {
+      type: Date,
+      default: null,
+    },
+    lastReplyErrorAt: {
+      type: Date,
+      default: null,
+    },
+    lastReplyErrorNotificationSentAt: {
+      type: Date,
+      default: null,
+    },
+    isErrorResolved: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+AutomatedPostSchema.pre("save", function (next) {
+  if (this.isModified("keywords") && Array.isArray(this.keywords)) {
+    this.keywords = this.keywords.map((kw) => kw.toLowerCase().trim());
+  }
+  next();
+});
+const AutomatedPost = mongoose.model("AutomatedPost", AutomatedPostSchema);
+module.exports = AutomatedPost;
+
+================================================
+FILE: models/DMLog.js
+================================================
+const mongoose = require("mongoose");
+const dmLogSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    mediaId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    mediaPermalink: {
+      type: String,
+      default: null,
+    },
+    commentId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    commenterId: {
+      type: String,
+      required: true,
+    },
+    matchedKeyword: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["dm", "reply"],
+      required: true,
+    },
+    automationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AutomatedPost",
+      default: null,
+    },
+    sent: {
+      type: Boolean,
+      default: false,
+    },
+    sentAt: {
+      type: Date,
+      default: null,
+    },
+    error: {
+      type: String,
+      default: null,
+    },
+    statusCode: {
+      type: Number,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+module.exports = mongoose.model("DMLog", dmLogSchema);
+
+================================================
 FILE: models/InstagramToken.js
 ================================================
 const mongoose = require("mongoose");
@@ -295,6 +959,10 @@ const instagramTokenSchema = new mongoose.Schema(
     tokenType: { type: String, default: "bearer" },
     expiresIn: { type: Number, required: true },
     expiresAt: { type: Date },
+    facebookUserId: { type: String },
+    fbLongAccessToken: { type: String },
+    pageLongAccessToken: { type: String },
+    instagramAccountId: { type: String },
   },
   { timestamps: true }
 );
@@ -334,6 +1002,7 @@ FILE: package.json
     "mongoose": "^8.16.1",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.5",
     "nodemon": "^3.1.10",
     "querystring": "^0.2.1",
     "winston": "^3.17.0"
@@ -348,6 +1017,7 @@ FILE: routes/auth.routes.js
 ================================================
 const express = require("express");
 const { getInstaToken, login, getProfile } = require("../controller/auth.controller");
+const authMiddleware = require("../middleware/auth");
 const router = express.Router();
 router.get("/login", login);
 router.get("/callback", getInstaToken);
@@ -355,10 +1025,99 @@ router.get("/profile", authMiddleware, getProfile);
 module.exports = router;
 
 ================================================
+FILE: routes/automatedPost.routes.js
+================================================
+const automatedPostController = require("../controller/automatedPostController");
+const authMiddleware = require("../middleware/auth");
+const router = require("express").Router();
+router.post("/", authMiddleware, automatedPostController.createAutomatedPost);
+router.get("/", automatedPostController.getAllAutomatedPosts);
+router.get("/:id", automatedPostController.getAutomatedPostById);
+router.put("/:id", automatedPostController.updateAutomatedPost);
+router.delete("/:id", automatedPostController.deleteAutomatedPost);
+router.patch("/:id/toggle", automatedPostController.togglePostStatus);
+module.exports = router;
+
+================================================
+FILE: routes/comment.routes.js
+================================================
+const express = require("express");
+const { getComments, replyToComment } = require("../controller/comment.controller");
+const authMiddleware = require("../middleware/auth");
+const router = express.Router();
+router.get("/media/:mediaId/comments", authMiddleware, getComments);
+router.post("/comment/:commentId/reply", authMiddleware, replyToComment);
+module.exports = router;
+
+================================================
+FILE: routes/dashboard.routes.js
+================================================
+const express = require("express");
+const authMiddleware = require("../middleware/auth");
+const { getDashboardStats } = require("../controller/dashboard.controller");
+const router = express.Router();
+router.get("/stats", authMiddleware, getDashboardStats);
+module.exports = router;
+
+================================================
+FILE: routes/dmLog.routes.js
+================================================
+const router = require("express").Router();
+const dmLogController = require("../controller/dmLogController");
+router.get("/", dmLogController.getDMLogs);
+router.get("/:id", dmLogController.getDMLogById);
+router.delete("/:id", dmLogController.deleteDMLog);
+module.exports = router;
+
+================================================
+FILE: routes/fbToken.routes.js
+================================================
+const express = require("express");
+const { upsertFacebookFields, getFacebookFields, deleteFacebookFields } = require("../controller/fbToken.controller");
+const authMiddleware = require("../middleware/auth");
+const router = express.Router();
+router.put("/", authMiddleware, upsertFacebookFields);
+router.get("/", authMiddleware, getFacebookFields);
+router.delete("/", authMiddleware, deleteFacebookFields);
+module.exports = router;
+
+================================================
+FILE: routes/media.routes.js
+================================================
+const express = require("express");
+const { getMedia, getDetailedMedia, getAPostDetails } = require("../controller/media.controller");
+const authMiddleware = require("../middleware/auth");
+const router = express.Router();
+router.get("/", authMiddleware, getMedia);
+router.get("/details", authMiddleware, getDetailedMedia);
+router.get("/:postId", authMiddleware, getAPostDetails);
+module.exports = router;
+
+================================================
+FILE: routes/privateReply.routes.js
+================================================
+const express = require("express");
+const { sendPrivateReply } = require("../controller/privateReply.controller");
+const authMiddleware = require("../middleware/auth");
+const router = express.Router();
+router.post("/send", authMiddleware, sendPrivateReply);
+module.exports = router;
+
+================================================
+FILE: routes/webhook.routes.js
+================================================
+const express = require("express");
+const { getWebhook, postWebhook } = require("../services/webhook.services");
+const router = express.Router();
+router.get("/", getWebhook);
+router.post("/", postWebhook);
+module.exports = router;
+
+================================================
 FILE: server.js
 ================================================
 const express = require("express");
-const { PORT, NODE_ENV } = require("./config/envConfig");
+const { PORT, NODE_ENV, FRONTEND_URL } = require("./config/envConfig");
 const connectDB = require("./config/db");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -370,15 +1129,35 @@ const errorHandler = require("./middleware/errorHandler");
 const path = require("path");
 const webhookRoutes = require("./routes/webhook.routes");
 const authRoutes = require("./routes/auth.routes");
+const mediaRoutes = require("./routes/media.routes");
+const fbTokenRoutes = require("./routes/fbToken.routes");
+const commentRoutes = require("./routes/comment.routes");
+const privateReplyRoutes = require("./routes/privateReply.routes");
+const automatedPostRoutes = require("./routes/automatedPost.routes");
+const dmLogRoutes = require("./routes/dmLog.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const { checkEmailConnection } = require("./config/email.config");
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(cors());
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(morganMiddleware);
 app.use("/webhook", webhookRoutes);
 app.use("/auth", authRoutes);
+app.use("/media", mediaRoutes);
+app.use("/fb-token", fbTokenRoutes);
+app.use("/comment", commentRoutes);
+app.use("/private-reply", privateReplyRoutes);
+app.use("/automated-post", automatedPostRoutes);
+app.use("/dm-log", dmLogRoutes);
+app.use("/dashboard", dashboardRoutes);
 app.get("/", (req, res) => {
   logger.info("GET / - root route hit");
   res.send("INSTAGRAM AUTOMATION BACKEND SERVER IS RUNNING");
@@ -393,9 +1172,425 @@ app.use(notFound);
 app.use(errorHandler);
 app.listen(PORT, () => {
   connectDB();
+  checkEmailConnection();
   logger.info(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
   logger.info(`🔗 http:
 });
+
+================================================
+FILE: services/auth.services.js
+================================================
+const axios = require("axios");
+const InstagramToken = require("../models/InstagramToken");
+const logger = require("../utils/logger");
+async function saveInstagramToken({ userId, accessToken, tokenType, expiresIn }) {
+  console.log("%c Line:6 🍓 expiresIn", "color:
+  console.log("%c Line:6 🍞 tokenType", "color:
+  console.log("%c Line:6 🥟 accessToken", "color:
+  console.log("%c Line:6 🍌 userId", "color:
+  const tokenData = {
+    userId,
+    accessToken,
+    tokenType,
+    expiresIn,
+  };
+  try {
+    const existing = await InstagramToken.findOne({ userId });
+    logger.debug(`Saving Instagram Token: ${JSON.stringify(tokenData, null, 2)}`);
+    if (existing) {
+      existing.accessToken = accessToken;
+      existing.tokenType = tokenType;
+      existing.expiresIn = expiresIn;
+      await existing.save();
+      return existing;
+    } else {
+      const newToken = new InstagramToken(tokenData);
+      await newToken.save();
+      return newToken;
+    }
+  } catch (error) {
+    console.error("Error saving Instagram Token:", error);
+    logger.error(`Error saving Instagram Token: ${error.message}`);
+    throw error;
+  }
+}
+async function getInstagramProfile(accessToken) {
+  try {
+    const response = await axios.get("https:
+      params: {
+        fields: "id,username,name,user_id,account_type,profile_picture_url,followers_count,follows_count,media_count",
+        access_token: accessToken,
+      },
+    });
+    logger.debug(`Fetched Instagram Profile: ${JSON.stringify(response.data, null, 2)}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Instagram profile:", error.response?.data || error.message);
+    logger.error(`Error fetching Instagram profile: ${error.response?.data || error.message}`);
+    throw error;
+  }
+}
+module.exports = { saveInstagramToken, getInstagramProfile };
+
+================================================
+FILE: services/email.service.js
+================================================
+const { transporter } = require("../config/email.config");
+const { MAILER_EMAILID, RECEIVING_EMAILID } = require("../config/envConfig");
+const logger = require("../utils/logger");
+const sendEmail = async (subject, htmlContent, contextForLog = {}) => {
+  if (!subject || !htmlContent) {
+    logger.error("sendEmail called with missing parameters.", { subject: !!subject, html: !!htmlContent, contextForLog });
+    throw new Error("sendEmail called with missing parameters.");
+  }
+  const mailOptions = {
+    from: `"All Tech Tamil - Insta Automated Post" <${MAILER_EMAILID}>`,
+    to: RECEIVING_EMAILID,
+    subject: subject,
+    html: htmlContent,
+  };
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    logger.info(`Email sent successfully to ${RECEIVING_EMAILID} with subject "${subject}". Message ID: ${info.messageId}`, contextForLog);
+    return info;
+  } catch (error) {
+    logger.error(`Email sending failed for recipient ${RECEIVING_EMAILID} with subject "${subject}": ${error.message}`, {
+      stack: error.stack,
+      mailOptions,
+      contextForLog,
+    });
+    throw error;
+  }
+};
+const sendDMError = async (userId, mediaId, commenterId, errorMessage, postRule, now) => {
+  const subject = `🚨 DM Automation Failed for Media ${mediaId}`;
+  const html = `
+                        <h3>DM Automation Error</h3>
+                        <p><strong>User:</strong> ${userId}</p>
+                        <p><strong>Media:</strong> ${mediaId}</p>
+                        <p><strong>Commenter:</strong> ${commenterId}</p>
+                        <p><strong>Error:</strong> ${errorMessage}</p>
+                        <p><strong>Time:</strong> ${now.toLocaleString()}</p>
+                        <hr><p>This is sent only once until resolved.</p>
+                      `;
+  try {
+    const htmlContent = await sendEmail(subject, html, { type: "DM_ERROR", userId, automationId: postRule._id });
+    logger.info(`DM Error email sent successfully to ${RECEIVING_EMAILID} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
+    return htmlContent;
+  } catch (error) {
+    throw error;
+  }
+};
+const sendReplyError = async (userId, mediaId, commenterId, errorMessage, postRule, now) => {
+  const subject = `🚨 Reply Automation Failed for Media ${mediaId}`;
+  const html = `
+                    <h3>Reply Automation Error</h3>
+                    <p><strong>User:</strong> ${userId}</p>
+                    <p><strong>Media:</strong> ${mediaId}</p>
+                    <p><strong>Commenter:</strong> ${commenterId}</p>
+                    <p><strong>Error:</strong> ${errorMessage}</p>
+                    <p><strong>Time:</strong> ${now.toLocaleString()}</p>
+                    <hr><p>This is sent only once until resolved.</p>
+                  `;
+  try {
+    const htmlContent = await sendEmail(subject, html, { type: "REPLY_ERROR", userId, automationId: postRule._id });
+    logger.info(`Reply Error email sent successfully to ${RECEIVING_EMAILID} for media ${mediaId}. Message ID: ${htmlContent.messageId}`);
+    return htmlContent;
+  } catch (error) {
+    throw error;
+  }
+};
+module.exports = {
+  sendEmail,
+  sendDMError,
+  sendReplyError,
+};
+
+================================================
+FILE: services/media.services.js
+================================================
+const axios = require("axios");
+const logger = require("../utils/logger");
+const { FACEBOOK_API_URL } = require("../config/envConfig");
+const FIELDS = [
+  "id",
+  "caption",
+  "media_type",
+  "media_url",
+  "thumbnail_url",
+  "media_product_type",
+  "timestamp",
+  "like_count",
+  "comments_count",
+  "permalink",
+  "comments{id,from,text,timestamp,like_count,replies{from,timestamp,like_count,text}}",
+].join(",");
+async function fetchInstagramMedia(userId, accessToken) {
+  const media = [];
+  let nextPage = `https:
+  let params = {
+    access_token: accessToken,
+    fields: "id,caption,media_type,media_url,permalink,timestamp,username,thumbnail_url",
+    limit: 25,
+  };
+  while (nextPage) {
+    try {
+      const res = await axios.get(nextPage, { params });
+      if (res.data.data && Array.isArray(res.data.data)) {
+        media.push(...res.data.data);
+      }
+      nextPage = res.data.paging?.next || null;
+      params = {}; 
+    } catch (err) {
+      logger.error("Error fetching media:", err.response?.data || err.message);
+      throw err;
+    }
+  }
+  return media;
+}
+const getFullMedia = async (userId, accessToken) => {
+  try {
+    const url = `https:
+    const mediaResponse = await axios.get(url, {
+      params: {
+        fields: FIELDS,
+        access_token: accessToken,
+      },
+    });
+    logger.info("✅ Instagram media fetched successfully");
+    return mediaResponse.data;
+  } catch (error) {
+    console.error("Error fetching media:", error.response?.data || error.message);
+    logger.error(`Error fetching media: ${error.response?.data || error.message}`);
+    throw error;
+  }
+};
+const getAPost = async (postId, access_token) => {
+  try {
+    const postUrl = `${FACEBOOK_API_URL}/${postId}?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username,children{media_url,media_type}&access_token=${access_token}`;
+    const insightsUrl = `${FACEBOOK_API_URL}/${postId}/insights?metric=reach,views,likes,comments,saved,shares&access_token=${access_token}`;
+    const commentsUrl = `${FACEBOOK_API_URL}/${postId}/comments?fields=id,username,text,timestamp,like_count,replies{username,text,timestamp,like_count}&order=chronological&access_token=${access_token}`;
+    const [postResponse, insightsResponse, commentsResponse] = await Promise.all([axios.get(postUrl), axios.get(insightsUrl), axios.get(commentsUrl)]);
+    logger.info(`✅ Instagram post fetched successfully`);
+    return {
+      ...postResponse.data,
+      insights: insightsResponse.data.data,
+      comments: commentsResponse.data.data,
+    };
+  } catch (error) {
+    console.error(`🚨 Error getting full post details: ${error.message}`, error.response?.data);
+    logger.error(`🚨 Error getting full post details: ${error.message}`, error.response?.data);
+    throw error;
+  }
+};
+module.exports = { fetchInstagramMedia, getFullMedia, getAPost };
+
+================================================
+FILE: services/webhook.services.js
+================================================
+const axios = require("axios");
+const { VERIFY_TOKEN } = require("../config/envConfig");
+const InstagramToken = require("../models/InstagramToken");
+const AutomatedPost = require("../models/AutomatedPost");
+const DMLog = require("../models/DMLog");
+const logger = require("../utils/logger");
+const { sendDMError, sendReplyError } = require("./email.service");
+const DM_COOLDOWN_MS = 60 * 60 * 1000;
+const REPLY_COOLDOWN_MS = 30 * 60 * 1000;
+const NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000;
+const getWebhook = (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    logger.info("WEBHOOK_VERIFIED");
+    return res.status(200).send(challenge);
+  }
+  res.sendStatus(403);
+};
+const postWebhook = async (req, res) => {
+  try {
+    logger.info("Received Webhook:", JSON.stringify(req.body, null, 2));
+    const entries = req.body.entry || [];
+    for (const entry of entries) {
+      const changes = entry?.changes || [];
+      for (const change of changes) {
+        const comment = change?.value;
+        const field = change?.field;
+        if (field !== "comments" || !comment?.media?.id || !comment?.text) continue;
+        const mediaId = comment.media.id;
+        const text = comment.text.toLowerCase();
+        const commentId = comment.id;
+        const commenterId = comment.from?.id;
+        const instagramAccountId = entry.id;
+        const now = new Date();
+        logger.debug(`📩 Comment: "${text}" on media ${mediaId} from user ${commenterId}`);
+        logger.debug(`📷 Instagram Account ID: ${instagramAccountId}`);
+        if (commenterId === instagramAccountId) {
+          logger.info("👻 Skipping bot’s own comment.");
+          continue;
+        }
+        const tokenDoc = await InstagramToken.findOne({ instagramAccountId });
+        if (!tokenDoc) {
+          logger.warn(`⚠️ No token found for IG account: ${instagramAccountId}`);
+          continue;
+        }
+        const userId = tokenDoc.userId;
+        logger.debug(`✅ IG Account ${instagramAccountId} mapped to User ${userId}`);
+        const postRule = await AutomatedPost.findOne({ mediaId, userId, isEnabled: true });
+        logger.debug(`🎯 Rule lookup: ${postRule ? "FOUND" : "NOT FOUND"}`);
+        if (!postRule) continue;
+        if ((postRule.startDate && now < postRule.startDate) || (postRule.endDate && now > postRule.endDate)) {
+          logger.info(`⏰ Rule is outside active window.`);
+          continue;
+        }
+        const matchedKeyword = postRule.keywords.find((kw) => text.includes(kw.toLowerCase()));
+        if (!matchedKeyword) {
+          logger.info(`🛑 No keywords matched in comment.`);
+          continue;
+        }
+        logger.info(`✅ Matched keyword: "${matchedKeyword}"`);
+        const dmText = postRule.replyMessage;
+        const replyText = postRule.replyComment || postRule.replyMessage;
+        if (postRule.isDM && (postRule.maxDMs === null || postRule.sentDMs < postRule.maxDMs)) {
+          const recentDM = await DMLog.findOne({
+            commenterId,
+            mediaId,
+            type: "dm",
+            sent: true,
+            sentAt: { $gte: new Date(now.getTime() - DM_COOLDOWN_MS) },
+          });
+          if (recentDM) {
+            logger.info(`⏳ DM cooldown active. Skipping DM for ${commenterId}`);
+          } else {
+            try {
+              const dmUrl = `https:
+              const dmPayload = {
+                recipient: { comment_id: commentId },
+                message: { text: dmText },
+                messaging_type: "RESPONSE",
+              };
+              const dmResponse = await axios.post(dmUrl, dmPayload, {
+                params: { access_token: tokenDoc.pageLongAccessToken },
+                headers: { "Content-Type": "application/json" },
+              });
+              logger.info(`✅ DM sent: ${dmResponse.data.message_id}`);
+              postRule.sentDMs += 1;
+              postRule.lastDMErrorAt = null;
+              postRule.lastDMErrorNotificationSentAt = null;
+              await postRule.save();
+              await DMLog.create({
+                userId,
+                mediaId,
+                commentId,
+                commenterId,
+                matchedKeyword,
+                message: dmText,
+                type: "dm",
+                automationId: postRule._id,
+                sent: true,
+                sentAt: now,
+                statusCode: 200,
+              });
+            } catch (err) {
+              const errorMessage = err.response?.data?.error?.message || err.message;
+              logger.error(`❌ DM send error: ${errorMessage}`);
+              postRule.lastDMErrorAt = now;
+              const alreadyNotified = postRule.lastDMErrorNotificationSentAt && now.getTime() - postRule.lastDMErrorNotificationSentAt.getTime() < NOTIFICATION_COOLDOWN_MS;
+              if (!alreadyNotified) {
+                await sendDMError(userId, mediaId, commenterId, errorMessage, postRule, now);
+                postRule.lastDMErrorNotificationSentAt = now;
+              }
+              await postRule.save();
+              await DMLog.create({
+                userId,
+                mediaId,
+                commentId,
+                commenterId,
+                matchedKeyword,
+                message: dmText,
+                type: "dm",
+                automationId: postRule._id,
+                sent: false,
+                error: errorMessage,
+                sentAt: now,
+                statusCode: err.response?.status || 500,
+              });
+            }
+          }
+        }
+        if (postRule.isReply && (postRule.maxReplies === null || postRule.sentReplies < postRule.maxReplies)) {
+          const recentReply = await DMLog.findOne({
+            commenterId,
+            mediaId,
+            type: "reply",
+            sent: true,
+            sentAt: { $gte: new Date(now.getTime() - REPLY_COOLDOWN_MS) },
+          });
+          if (recentReply) {
+            logger.info(`⏳ Reply cooldown active. Skipping reply for ${commenterId}`);
+          } else {
+            try {
+              const replyUrl = `https:
+              const replyPayload = { message: replyText };
+              const replyResponse = await axios.post(replyUrl, replyPayload, {
+                params: { access_token: tokenDoc.pageLongAccessToken },
+                headers: { "Content-Type": "application/json" },
+              });
+              logger.info(`✅ Reply posted via /replies: ${replyResponse.data.id}`);
+              postRule.sentReplies += 1;
+              postRule.lastReplyErrorAt = null;
+              postRule.lastReplyErrorNotificationSentAt = null;
+              await postRule.save();
+              await DMLog.create({
+                userId,
+                mediaId,
+                commentId,
+                commenterId,
+                matchedKeyword,
+                message: replyText,
+                type: "reply",
+                automationId: postRule._id,
+                sent: true,
+                sentAt: now,
+                statusCode: 200,
+              });
+            } catch (err) {
+              const errorMessage = err.response?.data?.error?.message || err.message;
+              logger.error(`❌ Reply send error via /replies: ${errorMessage}`);
+              postRule.lastReplyErrorAt = now;
+              const alreadyNotified = postRule.lastReplyErrorNotificationSentAt && now.getTime() - postRule.lastReplyErrorNotificationSentAt.getTime() < NOTIFICATION_COOLDOWN_MS;
+              if (!alreadyNotified) {
+                await sendReplyError(userId, mediaId, commenterId, errorMessage, postRule, now);
+                postRule.lastReplyErrorNotificationSentAt = now;
+              }
+              await postRule.save();
+              await DMLog.create({
+                userId,
+                mediaId,
+                commentId,
+                commenterId,
+                matchedKeyword,
+                message: replyText,
+                type: "reply",
+                automationId: postRule._id,
+                sent: false,
+                error: errorMessage,
+                sentAt: now,
+                statusCode: err.response?.status || 500,
+              });
+            }
+          }
+        }
+      }
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    logger.error("❌ Unhandled webhook error:", err.message);
+    res.sendStatus(500);
+  }
+};
+module.exports = { getWebhook, postWebhook };
 
 ================================================
 FILE: utils/jwt.js

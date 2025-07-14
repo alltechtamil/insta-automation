@@ -9,7 +9,7 @@ ADD_LINE_NUMBERS=false
 INCLUDE_EMPTY_FILES=true
 
 excluded_folders=("node_modules" "logs" "node_modules" ".git")
-excluded_files=("package-lock.json" "mathan.json" "Readme.md" "CodeMate.js" "promptTemplate.js" ".prettierrc" ".eslintrc.json" "combined_for_llm.txt" ".prettierignore" ".gitignore" "server-new.js" "server-old.js" "notes.txt" 'example.env' "extract_for_llm.sh" "extract_for_ai.sh")
+excluded_files=("package-lock.json" "sendDM.js" "sendReply.js" "mathan.json" "Readme.md" "CodeMate.js" "promptTemplate.js" ".prettierrc" ".eslintrc.json" "combined_for_llm.txt" ".prettierignore" ".gitignore" "server-new.js" "server-old.js" "notes.txt" 'example.env' "extract_for_llm.sh" "extract_for_ai.sh")
 
 > "$output_file" 
 

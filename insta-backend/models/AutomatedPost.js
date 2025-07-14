@@ -104,6 +104,18 @@ const AutomatedPostSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    pausedUntil: {
+      type: Date,
+      default: null,
+    },
+    lastViolationMessage: {
+      type: String,
+      default: null,
+    },
+    pauseNotificationSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
