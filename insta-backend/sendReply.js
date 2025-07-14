@@ -1,8 +1,9 @@
 const axios = require("axios");
 
-const commentId = "18105426286482122";
+const commentId = "17954030561987233";
+// FB_TOKEN
 const accessToken =
-  "EAAJZBumxZBLCcBPO6OrVcRZCW5AZCrSpFw7dlJemItvabwVQPMevZCPmxD6upSQadx9qwx0eNv6nUIDKiUd91SPKsLiZBwU0xrmfZBQ3UKyA0OrBKavsn628MFxZAu3y4TfIp7ChfFdGf7uI0toA2UByTmdPVhbe7z2rKvpWSOqvPAGzZBdrJ7AsSE72f59TNwbqqToiq5hCvxHmyyZAntaKWaPmfJ"; // Your actual token
+  "EAAJZBumxZBLCcBPAklvV321VdwmMWwNP4UXRlbWuEd3EjOehOcYm497D0Px8eNLvMwoZCvEWnUGVOojCPhWvEm93DG5m3pyxeJ1WCYzyymWwRA5ZBBCtDH3RwcS7DTjlKzknfqjxwOg7oXO00xMtQwnZCphlRHp6rEVe8gONKzQjcl2hE4HznZCxgDLW2qTeuszM6aqquSpxOy"; // Your actual token
 
 const sendReply = async () => {
   axios
