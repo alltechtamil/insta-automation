@@ -1,16 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Switch, Select, InputNumber, DatePicker, Divider, Spin } from "antd";
+import { 
+  Modal, 
+  Form, 
+  Input, 
+  Switch, 
+  Select, 
+  InputNumber, 
+  DatePicker, 
+  Divider, 
+  Spin,
+  Alert,
+  Tabs,
+  Card,
+  Tag,
+  Row,
+  Col
+} from "antd";
 import axios from "../../../../lib/axios";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 
 const { TextArea } = Input;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 const AutomationFormModal = ({ mode, visible, onCancel, onSubmit, automation = {}, loading }) => {
   const [form] = Form.useForm();
   const [mediaOptions, setMediaOptions] = useState([]);
   const [loadingMedia, setLoadingMedia] = useState(false);
+  const [activeTab, setActiveTab] = useState("1");
+  const [showErrorResolved, setShowErrorResolved] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -24,9 +43,19 @@ const AutomationFormModal = ({ mode, visible, onCancel, onSubmit, automation = {
         ...automation,
         startDate: automation.startDate ? dayjs(automation.startDate) : null,
         endDate: automation.endDate ? dayjs(automation.endDate) : null,
+        isErrorResolved: automation.isErrorResolved || false
       });
+      
+      // Determine if we should show the error resolved toggle
+      const hasErrors = automation.lastDMErrorAt || automation.lastReplyErrorAt;
+      setShowErrorResolved(hasErrors);
+      
+      // Show advanced tab if editing an existing automation
+      setActiveTab("2");
     } else {
       form.resetFields();
+      setActiveTab("1");
+      setShowErrorResolved(false);
     }
   }, [automation, visible]);
 
@@ -35,7 +64,6 @@ const AutomationFormModal = ({ mode, visible, onCancel, onSubmit, automation = {
     try {
       const res = await axios.get("/media/details");
       const items = res.data?.media?.data || [];
-      console.log("items: ", items);
       setMediaOptions(items);
     } catch (err) {
       toast.error("Failed to fetch media");
@@ -58,9 +86,75 @@ const AutomationFormModal = ({ mode, visible, onCancel, onSubmit, automation = {
       ...values,
       startDate: values.startDate ? values.startDate.toISOString() : null,
       endDate: values.endDate ? values.endDate.toISOString() : null,
+      
+      // Reset error flags if user marks as resolved
+      ...(values.isErrorResolved && {
+        lastDMErrorAt: null,
+        lastReplyErrorAt: null,
+        lastViolationMessage: null,
+        pausedUntil: null
+      })
     };
     onSubmit(data);
   };
+
+  const renderMediaPreview = (item) => (
+    <Card
+      size="small"
+      style={{ marginTop: 8, border: "1px solid #f0f0f0" }}
+      bodyStyle={{ padding: 12 }}
+    >
+      <div style={{ display: "flex", gap: 12 }}>
+        {/* Media Thumbnail */}
+        <div style={{ flexShrink: 0 }}>
+          {item.media_type === "VIDEO" ? (
+            <video 
+              src={item.media_url} 
+              poster={item.thumbnail_url} 
+              width={80} 
+              height={80} 
+              style={{ borderRadius: 6, objectFit: "cover" }} 
+              muted 
+              autoPlay 
+              loop 
+            />
+          ) : (
+            <img 
+              src={item.media_url} 
+              alt="media" 
+              width={80} 
+              height={80} 
+              style={{ borderRadius: 6, objectFit: "cover" }} 
+            />
+          )}
+        </div>
+
+        {/* Media Info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 500, marginBottom: 4 }}>
+            {item.caption ? (
+              <div style={{ 
+                whiteSpace: "nowrap", 
+                overflow: "hidden", 
+                textOverflow: "ellipsis" 
+              }}>
+                {item.caption}
+              </div>
+            ) : (
+              <span style={{ color: "#999" }}>(No Caption)</span>
+            )}
+          </div>
+          
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Tag color="blue">ID: {item.id}</Tag>
+            <Tag color={item.media_type === "IMAGE" ? "green" : "orange"}>
+              {item.media_type}
+            </Tag>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
 
   return (
     <Modal
@@ -70,6 +164,7 @@ const AutomationFormModal = ({ mode, visible, onCancel, onSubmit, automation = {
       onOk={() => form.submit()}
       confirmLoading={loading}
       okText={mode === "edit" ? "Update" : "Create"}
+      width={700}
     >
       <Form
         layout="vertical"
@@ -79,136 +174,205 @@ const AutomationFormModal = ({ mode, visible, onCancel, onSubmit, automation = {
           isReply: true,
           isDM: true,
           isEnabled: true,
+          maxReplies: null,
+          maxDMs: null,
+          isErrorResolved: false
         }}
       >
-        <Form.Item label="Select Instagram Post" name="mediaId" rules={[{ required: true, message: "Post is required" }]}>
-          <Select showSearch placeholder="Choose a post" loading={loadingMedia} onChange={handleMediaChange} optionLabelProp="label">
-            {mediaOptions.map((item) => (
-              <Option key={item.id} value={item.id} label={item.caption || "(No Caption)"}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "flex-start",
-                    padding: 16,
-                    border: "1px solid #eee",
-                    borderRadius: 8,
-                    gap: 16,
-                    backgroundColor: "#fff",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-                    // marginBottom: 12,
-                  }}
+        {mode === "edit" && automation.pausedUntil && (
+          <Alert
+            message="Automation Paused"
+            description={
+              <>
+                <p>This automation is paused due to: {automation.lastViolationMessage || 'policy violation'}</p>
+                <p>
+                  <strong>Resumes:</strong> {dayjs(automation.pausedUntil).format('DD MMM YYYY, HH:mm')}
+                </p>
+              </>
+            }
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        
+        {mode === "edit" && showErrorResolved && (
+          <Alert
+            message="Error Resolution"
+            description={
+              <Form.Item 
+                name="isErrorResolved"
+                valuePropName="checked"
+                style={{ marginBottom: 0 }}
+                tooltip="Mark this when you've resolved the underlying issue"
+              >
+                <Switch 
+                  checkedChildren="Error Resolved" 
+                  unCheckedChildren="Error Pending" 
+                />
+              </Form.Item>
+            }
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          <TabPane tab="Basic Settings" key="1">
+            <Form.Item 
+              label="Select Instagram Post" 
+              name="mediaId" 
+              rules={[{ required: true, message: "Post is required" }]}
+            >
+              <Select 
+                showSearch 
+                placeholder="Choose a post" 
+                loading={loadingMedia} 
+                onChange={handleMediaChange}
+                optionLabelProp="label"
+                dropdownRender={(menu) => (
+                  <Spin spinning={loadingMedia}>
+                    {menu}
+                  </Spin>
+                )}
+              >
+                {mediaOptions.map((item) => (
+                  <Option key={item.id} value={item.id} label={item.caption || "(No Caption)"}>
+                    {renderMediaPreview(item)}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item 
+              label="Post Caption" 
+              name="postCaption" 
+              rules={[{ required: true, message: "Caption is required" }]}
+            >
+              <Input disabled placeholder="Auto-filled from post" />
+            </Form.Item>
+
+            <Form.Item 
+              label="Keywords (comma separated)" 
+              name="keywords" 
+              rules={[{ required: true, message: "At least one keyword is required" }]}
+              tooltip="Automation will trigger when any of these keywords are found in comments"
+            >
+              <Select 
+                mode="tags" 
+                tokenSeparators={[","]} 
+                placeholder="hello, offer, support" 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              label="Reply Message" 
+              name="replyMessage" 
+              rules={[{ required: true, message: "Reply message is required" }]}
+              tooltip="This message will be sent via Direct Message"
+            >
+              <TextArea rows={3} placeholder="Hi! Thanks for commenting..." />
+            </Form.Item>
+
+            <Form.Item 
+              label="Reply Comment (optional)" 
+              name="replyComment"
+              tooltip="Public reply to the comment (leave blank to use same as DM message)"
+            >
+              <Input placeholder="Public reply text..." />
+            </Form.Item>
+          </TabPane>
+
+          <TabPane tab="Advanced Settings" key="2">
+            <Divider orientation="left">Limits</Divider>
+            
+            <Form.Item 
+              label="Max Replies" 
+              name="maxReplies"
+              tooltip="Maximum number of public replies to send (leave empty for unlimited)"
+            >
+              <InputNumber 
+                min={0} 
+                placeholder="Unlimited if empty" 
+                style={{ width: "100%" }} 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              label="Max DMs" 
+              name="maxDMs"
+              tooltip="Maximum number of direct messages to send (leave empty for unlimited)"
+            >
+              <InputNumber 
+                min={0} 
+                placeholder="Unlimited if empty" 
+                style={{ width: "100%" }} 
+              />
+            </Form.Item>
+
+            <Divider orientation="left">Time Range</Divider>
+
+            <Form.Item 
+              label="Start Date" 
+              name="startDate"
+              tooltip="Automation will only run after this date"
+            >
+              <DatePicker 
+                showTime 
+                format="YYYY-MM-DD HH:mm" 
+                style={{ width: "100%" }} 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              label="End Date" 
+              name="endDate"
+              tooltip="Automation will stop running after this date"
+            >
+              <DatePicker 
+                showTime 
+                format="YYYY-MM-DD HH:mm" 
+                style={{ width: "100%" }} 
+              />
+            </Form.Item>
+
+            <Divider orientation="left">Features</Divider>
+
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item 
+                  label="Enable Automation" 
+                  name="isEnabled" 
+                  valuePropName="checked"
+                  tooltip="Turn this automation on/off"
                 >
-                  {/* Media Thumbnail */}
-                  <div style={{ flexShrink: 0 }}>
-                    {item.media_type === "VIDEO" ? (
-                      <video src={item.media_url} poster={item.thumbnail_url} width={100} height={100} style={{ borderRadius: 8, objectFit: "cover" }} muted autoPlay loop />
-                    ) : (
-                      <img src={item.media_url} alt="media" width={100} height={100} style={{ borderRadius: 8, objectFit: "cover" }} />
-                    )}
-                  </div>
-
-                  {/* Media Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: 16,
-                        marginBottom: 6,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                      title={item.caption}
-                    >
-                      {item.caption || "(No Caption)"}
-                    </div>
-
-                    <div style={{ fontSize: 13, color: "#666", marginBottom: 6 }}>
-                      <strong>Type:</strong> {item.media_type} &nbsp; | &nbsp;
-                      <strong>ID:</strong> {item.id}
-                    </div>
-
-                    <div style={{ fontSize: 12, color: "#999" }}>
-                      <strong>Likes:</strong> {item.like_count} &nbsp; | &nbsp;
-                      <strong>Comments:</strong> {item.comments_count}
-                    </div>
-
-                    {/* Comments Preview */}
-                    {item.comments?.data?.length > 0 && (
-                      <div
-                        style={{
-                          marginTop: 12,
-                          maxHeight: 100,
-                          overflowY: "auto",
-                          paddingLeft: 8,
-                          borderLeft: "2px solid #eee",
-                        }}
-                      >
-                        {item.comments.data.slice(0, 5).map((comment) => (
-                          <div key={comment.id} style={{ marginBottom: 6 }}>
-                            <span style={{ fontWeight: 500 }}>{comment.from.username}</span>: <span style={{ color: "#333" }}>{comment.text}</span>
-                          </div>
-                        ))}
-                        {item.comments.data.length > 5 && <div style={{ fontSize: 12, color: "#888" }}>+{item.comments.data.length - 5} more comments</div>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item label="Post Caption" name="postCaption" rules={[{ required: true, message: "Caption is required" }]}>
-          <Input disabled placeholder="Auto-filled from post" />
-        </Form.Item>
-
-        <Form.Item label="Keywords (comma separated)" name="keywords" rules={[{ required: true, message: "At least one keyword is required" }]}>
-          <Select mode="tags" tokenSeparators={[","]} placeholder="hello, offer, support" />
-        </Form.Item>
-
-        <Form.Item label="Reply Message" name="replyMessage" rules={[{ required: true, message: "Reply message is required" }]}>
-          <TextArea rows={3} />
-        </Form.Item>
-
-        <Form.Item label="Reply Comment (optional)" name="replyComment">
-          <Input />
-        </Form.Item>
-
-        <Divider orientation="left">Limits</Divider>
-
-        <Form.Item label="Max Replies" name="maxReplies">
-          <InputNumber min={0} placeholder="Unlimited if empty" style={{ width: "100%" }} />
-        </Form.Item>
-
-        <Form.Item label="Max DMs" name="maxDMs">
-          <InputNumber min={0} placeholder="Unlimited if empty" style={{ width: "100%" }} />
-        </Form.Item>
-
-        <Divider orientation="left">Time Range</Divider>
-
-        <Form.Item label="Start Date" name="startDate">
-          <DatePicker style={{ width: "100%" }} />
-        </Form.Item>
-
-        <Form.Item label="End Date" name="endDate">
-          <DatePicker style={{ width: "100%" }} />
-        </Form.Item>
-
-        <Divider orientation="left">Flags</Divider>
-
-        <Form.Item label="Enable Automation" name="isEnabled" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-
-        <Form.Item label="Enable Auto Reply" name="isReply" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-
-        <Form.Item label="Enable Direct Message" name="isDM" valuePropName="checked">
-          <Switch />
-        </Form.Item>
+                  <Switch />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item 
+                  label="Auto Reply" 
+                  name="isReply" 
+                  valuePropName="checked"
+                  tooltip="Send public replies"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item 
+                  label="Direct Message" 
+                  name="isDM" 
+                  valuePropName="checked"
+                  tooltip="Send private messages"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+            </Row>
+          </TabPane>
+        </Tabs>
       </Form>
     </Modal>
   );
