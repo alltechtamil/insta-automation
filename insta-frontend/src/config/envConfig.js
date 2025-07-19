@@ -1,4 +1,4 @@
-export const BACKEND_API_URL = "https://dm-manager-backend.onrender.com";
+export const BACKEND_API_URL = "https://insta-backend-automation-178521a811be.herokuapp.com/auth/callback";
 
 export function assertEnv() {
   if (!BACKEND_API_URL) {

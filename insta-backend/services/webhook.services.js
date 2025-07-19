@@ -8,8 +8,8 @@ const SystemSetting = require("../models/SystemSetting");
 
 const DM_COOLDOWN_MS = 60 * 60 * 1000;
 const REPLY_COOLDOWN_MS = 30 * 60 * 1000;
-const MIN_DELAY_MS = 5000; // 5 seconds
-const MAX_DELAY_MS = 30000; // 30 seconds
+const MIN_DELAY_MS = 5000; 
+const MAX_DELAY_MS = 30000; 
 
 const actionQueue = [];
 let isProcessingQueue = false;
@@ -33,10 +33,9 @@ const processQueue = async () => {
   isProcessingQueue = false;
 };
 
-// Helper function to send DM with error handling
 const sendDirectMessage = async (data) => {
   const { tokenDoc, commentId, dmText, postRule, userId, mediaId, commenterId, matchedKeyword } = data;
-  const now = new Date(); // Use actual send time
+  const now = new Date(); 
 
   try {
     const dmUrl = `https://graph.facebook.com/v23.0/${tokenDoc.facebookUserId}/messages`;
@@ -81,7 +80,6 @@ const sendDirectMessage = async (data) => {
 
     postRule.lastDMErrorAt = now;
 
-    // Pause automation on violation
     if ([429, 10].includes(status)) {
       const cooldownSetting = await SystemSetting.findOne({ key: "violationCooldownMinutes" });
       const VIOLATION_COOLDOWN_MS = (cooldownSetting?.value || 30) * 60 * 1000;
@@ -116,7 +114,6 @@ const sendDirectMessage = async (data) => {
   }
 };
 
-// Helper function to send reply with error handling
 const sendReply = async (data) => {
   const { tokenDoc, commentId, replyText, postRule, userId, mediaId, commenterId, matchedKeyword } = data;
   const now = new Date();
@@ -248,19 +245,16 @@ const postWebhook = async (req, res) => {
         console.log(`🎯 Rule lookup: ${postRule ? "FOUND" : "NOT FOUND"}`);
         if (!postRule) continue;
 
-        // Check active dates
         if ((postRule.startDate && now < postRule.startDate) || (postRule.endDate && now > postRule.endDate)) {
           console.log(`⏰ Rule is outside active window.`);
           continue;
         }
 
-        // Check if automation is paused
         if (postRule.pausedUntil && now < postRule.pausedUntil) {
           console.log(`🛑 Automation paused until ${postRule.pausedUntil}. Skipping.`);
           continue;
         }
 
-        // Find matching keyword (case-insensitive)
         const matchedKeyword = postRule.keywords.find((kw) => text.includes(kw.toLowerCase()));
         if (!matchedKeyword) {
           console.log(`🛑 No keywords matched in comment.`);
@@ -330,7 +324,6 @@ const postWebhook = async (req, res) => {
       }
     }
 
-    // Process queue in background
     if (actionQueue.length > 0 && !isProcessingQueue) {
       processQueue().catch((err) => console.error("Queue processing error:", err));
     }
