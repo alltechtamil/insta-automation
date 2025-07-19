@@ -13,6 +13,7 @@ const login = (req, res) => {
   console.log("%c Line:14 🥛 redirectUri", "color:#3f7cff", redirectUri);
   const scopes = ["instagram_business_basic", "instagram_business_manage_messages", "instagram_business_manage_comments", "instagram_business_content_publish"];
   const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(",")}&response_type=code`;
+  console.log("%c Line:16 🥕 authUrl", "color:#6ec1c2", authUrl);
   res.redirect(authUrl);
 };
 
