@@ -1,4 +1,4 @@
-export const BACKEND_API_URL = "https://pub-filme-biz-cycling.trycloudflare.com";
+export const BACKEND_API_URL = "https://site--instaauto--qzlxcf8fbwfk.code.run";
 
 export function assertEnv() {
   if (!BACKEND_API_URL) {
